@@ -85,7 +85,7 @@ The `edrApi.ts` service provides functions to interact with the OGC EDR 1.1 API:
 
 ## Deployment
 
-This project uses GitHub Actions to automatically deploy to Firebase Hosting:
+This project uses GitHub Actions to automatically deploy to Firebase Hosting (project: `vibe-fmi`):
 
 ### Automatic Deployments
 
@@ -94,17 +94,14 @@ This project uses GitHub Actions to automatically deploy to Firebase Hosting:
 
 ### Setup Firebase Hosting
 
-To set up Firebase Hosting for this project, you need to configure the following GitHub secrets:
+The project is configured to deploy to the `vibe-fmi` Firebase project. To enable deployments, configure the following GitHub secret:
 
-1. **`FIREBASE_SERVICE_ACCOUNT`**: Firebase service account JSON key
+1. **`FIREBASE_SERVICE_ACCOUNT`**: Firebase service account JSON key for the `vibe-fmi` project
    - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Select your project
+   - Select the `vibe-fmi` project
    - Go to Project Settings > Service Accounts
    - Generate a new private key
-   - Add the entire JSON content as a secret
-
-2. **`FIREBASE_PROJECT_ID`**: Your Firebase project ID
-   - Found in Firebase Console > Project Settings
+   - Add the entire JSON content as a GitHub secret
 
 ### Manual Deployment
 
@@ -117,10 +114,7 @@ npm install -g firebase-tools
 # Login to Firebase
 firebase login
 
-# Initialize Firebase (first time only)
-firebase init hosting
-
-# Deploy to Firebase
+# Deploy to Firebase (project ID is already configured in .firebaserc)
 firebase deploy --only hosting
 ```
 
