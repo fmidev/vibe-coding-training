@@ -8,6 +8,9 @@ on:
 jobs:
   build_and_preview:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
