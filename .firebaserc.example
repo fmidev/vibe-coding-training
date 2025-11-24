@@ -1,5 +1,6 @@
-# Firebase
-.firebase/
-.firebaserc
-firebase-debug.log
-firebase-debug.*.log
+{
+  "projects": {
+    "default": "your-firebase-project-id"
+  }
+}
+
