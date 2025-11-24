@@ -81,6 +81,48 @@ The `edrApi.ts` service provides functions to interact with the OGC EDR 1.1 API:
 - **Vite**: Build tool and development server
 - **Material UI**: Component library
 - **OGC EDR 1.1**: Environmental Data Retrieval API standard
+- **Firebase Hosting**: Deployment platform
+
+## Deployment
+
+This project uses GitHub Actions to automatically deploy to Firebase Hosting:
+
+### Automatic Deployments
+
+- **PR Preview**: Every pull request automatically deploys a preview version to Firebase Hosting
+- **Production**: Merges to the `main` branch automatically deploy to the live Firebase Hosting site
+
+### Setup Firebase Hosting
+
+To set up Firebase Hosting for this project, you need to configure the following GitHub secrets:
+
+1. **`FIREBASE_SERVICE_ACCOUNT`**: Firebase service account JSON key
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Select your project
+   - Go to Project Settings > Service Accounts
+   - Generate a new private key
+   - Add the entire JSON content as a secret
+
+2. **`FIREBASE_PROJECT_ID`**: Your Firebase project ID
+   - Found in Firebase Console > Project Settings
+
+### Manual Deployment
+
+If you want to deploy manually:
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Login to Firebase
+firebase login
+
+# Initialize Firebase (first time only)
+firebase init hosting
+
+# Deploy to Firebase
+firebase deploy --only hosting
+```
 
 ## License
 
