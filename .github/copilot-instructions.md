@@ -50,7 +50,7 @@ src/
 
 ### OGC EDR 1.1 API
 - Base URL: `https://opendata.fmi.fi/edr`
-- Default Collection: `ecmwf`
+- Default Collection: `pal_skandinavia`
 - Documentation: https://docs.ogc.org/is/19-086r6/19-086r6.html
 
 ### Common Query Patterns
