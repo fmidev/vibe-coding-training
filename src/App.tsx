@@ -69,13 +69,13 @@ function App() {
                 <ListItem>
                   <ListItemText
                     primary="3. Use GitHub Copilot"
-                    secondary="Assign the issue to GitHub Copilot or use Copilot in your IDE to help implement the feature"
+                    secondary="Assign the issue to GitHub Copilot - the coding agent will create a pull request with the implementation plan and code changes"
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary="4. Submit a Pull Request"
-                    secondary="Once your feature is ready, create a pull request for review"
+                    primary="4. Review and Preview"
+                    secondary="View the pull request to see the plan and changes. Each PR is automatically deployed to Firebase Hosting for preview (requires approving the workflow run)"
                   />
                 </ListItem>
                 <ListItem>
@@ -95,6 +95,15 @@ function App() {
                   rel="noopener noreferrer"
                 >
                   Create Your First Issue
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Code />}
+                  href="https://github.com/fmidev/vibe-coding-training/pulls"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Pull Requests
                 </Button>
                 <Button
                   variant="outlined"
@@ -190,7 +199,7 @@ function App() {
               </Typography>
 
               <Typography variant="body2" paragraph>
-                <strong>Default Collection:</strong> pal_skandinavia (PAL-AROME model for Scandinavia)
+                <strong>Default Collection:</strong> pal_skandinavia (MEPS model for Scandinavia)
               </Typography>
 
               <Typography variant="body2" paragraph>
@@ -208,7 +217,7 @@ function App() {
                 Example API Query
               </Typography>
               <Typography variant="body2" paragraph>
-                Here's an example of how to get weather data for Oslo, Norway:
+                Here's an example of how to get weather data for Oslo, Norway (Friday, Nov 28, 2025):
               </Typography>
               <Box
                 sx={{
@@ -223,10 +232,60 @@ function App() {
               >
                 https://opendata.fmi.fi/edr/collections/pal_skandinavia/position?<br />
                 f=CoverageJSON&<br />
-                parameter-name=TotalCloudCover,WindSpeedMS,WindDirection,Temperature,<br />
-                Precipitation1h,PoP,Humidity,HourlyMaximumGust,DewPoint&<br />
-                datetime=2025-11-22T22:00:00Z/2025-12-07T12:00:00Z&<br />
+                parameter-name=Temperature,WindSpeedMS,TotalCloudCover&<br />
+                datetime=2025-11-28T12:00:00Z&<br />
                 coords=POINT(10.752 59.913)
+              </Box>
+
+              <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+                Example Response
+              </Typography>
+              <Typography variant="body2" paragraph>
+                The API returns data in CoverageJSON format. Here's a sample of what you might receive:
+              </Typography>
+              <Box
+                sx={{
+                  bgcolor: 'grey.900',
+                  color: 'grey.100',
+                  p: 2,
+                  borderRadius: 1,
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  overflowX: 'auto',
+                }}
+              >
+                {`{
+  "type": "Coverage",
+  "domain": {
+    "type": "Domain",
+    "axes": {
+      "x": { "values": [10.752] },
+      "y": { "values": [59.913] },
+      "t": { "values": ["2025-11-28T12:00:00Z"] }
+    }
+  },
+  "parameters": {
+    "Temperature": {
+      "type": "Parameter",
+      "description": "Air temperature",
+      "unit": { "symbol": "°C" },
+      "observedProperty": { "label": "Temperature" }
+    },
+    "WindSpeedMS": {
+      "type": "Parameter",
+      "unit": { "symbol": "m/s" }
+    },
+    "TotalCloudCover": {
+      "type": "Parameter",
+      "unit": { "symbol": "%" }
+    }
+  },
+  "ranges": {
+    "Temperature": { "values": [2.3] },
+    "WindSpeedMS": { "values": [4.5] },
+    "TotalCloudCover": { "values": [65] }
+  }
+}`}
               </Box>
 
               <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
