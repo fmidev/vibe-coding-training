@@ -7,15 +7,15 @@ A React application for demonstrating OGC EDR 1.1 API integration with FMI Open 
 - **React + Vite + TypeScript**: Modern React development with fast build times
 - **Material UI**: Professional UI components and design system
 - **OGC EDR 1.1 API Integration**: Access environmental data from FMI Open Data
-- **ECMWF Collection**: Default data collection from European Centre for Medium-Range Weather Forecasts
+- **PAL Skandinavia Collection**: Default data collection from PAL-AROME model for Scandinavia
 
 ## FMI Open Data API
 
 This application uses the FMI Open Data OGC EDR 1.1 API:
 
 - **Endpoint**: https://opendata.fmi.fi/edr
-- **Default Collection**: ecmwf
-- **Collection Metadata**: https://opendata.fmi.fi/edr/collections/ecmwf
+- **Default Collection**: pal_skandinavia
+- **Collection Metadata**: https://opendata.fmi.fi/edr/collections/pal_skandinavia
 - **API Documentation**: [OGC EDR 1.1 Specification](https://docs.ogc.org/is/19-086r6/19-086r6.html)
 
 ## Getting Started

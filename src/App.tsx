@@ -25,7 +25,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getCollection('ecmwf');
+      const data = await getCollection();
       setCollection(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -52,12 +52,12 @@ function App() {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Stack spacing={3}>
           <Typography variant="h4" component="h1" gutterBottom>
-            ECMWF Collection Viewer
+            PAL Skandinavia Collection Viewer
           </Typography>
 
           <Typography variant="body1" color="text.secondary">
             This application demonstrates OGC EDR 1.1 API integration with FMI Open Data.
-            The default collection is ECMWF (European Centre for Medium-Range Weather Forecasts).
+            The default collection is PAL Skandinavia (PAL-AROME model for Scandinavia).
           </Typography>
 
           {error && (

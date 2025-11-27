@@ -2,11 +2,11 @@
  * OGC EDR 1.1 API Service for FMI Open Data
  * API Documentation: https://docs.ogc.org/is/19-086r6/19-086r6.html
  * FMI Endpoint: https://opendata.fmi.fi/edr
- * Default Collection: ecmwf
+ * Default Collection: pal_skandinavia
  */
 
 const EDR_BASE_URL = 'https://opendata.fmi.fi/edr';
-const DEFAULT_COLLECTION = 'ecmwf';
+const DEFAULT_COLLECTION = 'pal_skandinavia';
 
 export interface Collection {
   id: string;
@@ -47,7 +47,7 @@ export const getCollections = async (): Promise<CollectionsResponse> => {
 
 /**
  * Fetch metadata for a specific collection
- * @param collectionId - Collection ID (default: ecmwf)
+ * @param collectionId - Collection ID (default: pal_skandinavia)
  */
 export const getCollection = async (
   collectionId: string = DEFAULT_COLLECTION
