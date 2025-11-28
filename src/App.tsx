@@ -129,25 +129,27 @@ function App() {
     }
 
     try {
-      // Get current time and 15 minutes ahead for a near real-time query
+      // Get observational data from the past hour
+      // Using 'opendata' collection which contains actual weather station observations
       const now = new Date();
-      const fifteenMinutesLater = new Date(now.getTime() + 15 * 60 * 1000);
-      const datetime = `${now.toISOString()}/${fifteenMinutesLater.toISOString()}`;
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const datetime = `${oneHourAgo.toISOString()}/${now.toISOString()}`;
 
       const data = await getPositionData(
-        'pal_skandinavia',
+        'opendata',
         city.coords,
         {
           f: 'CoverageJSON',
-          'parameter-name': 'Temperature',
+          'parameter-name': 'ta_pt1m_avg',
           datetime,
         }
       ) as CoverageJSONResponse;
 
-      // Extract the first temperature value (closest to current time)
-      // The API returns values in chronological order, so the first value represents the most current temperature
-      if (data.ranges && data.ranges.Temperature && data.ranges.Temperature.values.length > 0) {
-        const temp = data.ranges.Temperature.values[0];
+      // Extract the most recent temperature value
+      // The API returns values in chronological order, so the last value is the most recent
+      if (data.ranges && data.ranges.ta_pt1m_avg && data.ranges.ta_pt1m_avg.values.length > 0) {
+        const values = data.ranges.ta_pt1m_avg.values;
+        const temp = values[values.length - 1]; // Get the most recent value
         setCityTemperature(temp);
       } else {
         setCityError('Temperature data not available');
@@ -205,7 +207,7 @@ function App() {
               <Divider sx={{ my: 2 }} />
               
               <Typography variant="body1" paragraph>
-                Select a Finnish city to see its current temperature:
+                Select a Finnish city to see its current temperature from FMI weather stations:
               </Typography>
 
               <FormControl fullWidth sx={{ mb: 3 }}>
