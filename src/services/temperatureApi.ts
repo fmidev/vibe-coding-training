@@ -39,11 +39,12 @@ interface CoverageJSONResponse {
 }
 
 /**
- * Get today's date in YYYY-MM-DD format
+ * Get default date for the temperature query
+ * Returns a date that has forecast data available
  */
 export const getTodayDate = (): string => {
-  // Use a date that has forecast data available
   // The pal_skandinavia collection provides forecast data
+  // Use a recent date that has data available
   return '2025-11-24';
 };
 

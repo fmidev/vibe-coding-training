@@ -180,18 +180,18 @@ const DailyAverageTemperature: FC = () => {
               {locationData.map((location) => (
                 <Paper
                   key={location.name}
-                    elevation={3}
-                    sx={{
-                      p: 2,
-                      textAlign: 'center',
-                      bgcolor: getTemperatureColor(location.temperature),
-                      color: location.temperature !== undefined && location.temperature > 15 ? 'black' : 'white',
-                      minHeight: 100,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                    }}
-                  >
+                  elevation={3}
+                  sx={{
+                    p: 2,
+                    textAlign: 'center',
+                    bgcolor: getTemperatureColor(location.temperature),
+                    color: location.temperature !== undefined && location.temperature > 15 ? 'black' : 'white',
+                    minHeight: 100,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                  }}
+                >
                     <Typography variant="h6" component="div" fontWeight="bold">
                       {location.name}
                     </Typography>
