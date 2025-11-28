@@ -43,13 +43,9 @@ console.log('App.tsx module loaded');
 
 function App() {
   console.log('App() function called - rendering component');
-  const [weatherData, setWeatherData] = useState<Record<string, WeatherDataPoint[] | null>>({
-    helsinki: null,
-    sodankyla: null,
-    utsjoki: null,
-    kilpisjarvi: null,
-    pello: null,
-  });
+  const [weatherData, setWeatherData] = useState<Record<string, WeatherDataPoint[] | null>>(() =>
+    Object.fromEntries(Object.keys(LOCATIONS).map(key => [key, null]))
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,16 +104,15 @@ function App() {
       const endTime = sevenHoursLater.toISOString().split('.')[0] + 'Z';
 
       // Fetch data for all locations in parallel with same time range
-      const locationKeys = Object.keys(LOCATIONS) as Array<keyof typeof LOCATIONS>;
+      const locationKeys = Object.keys(LOCATIONS) as (keyof typeof LOCATIONS)[];
       const results = await Promise.all(
         locationKeys.map(key => fetchWeatherDataForLocation(key, startTime, endTime))
       );
       
-      // Update state with all location data
-      const newWeatherData: Record<string, WeatherDataPoint[] | null> = {};
-      locationKeys.forEach((key, index) => {
-        newWeatherData[key] = results[index];
-      });
+      // Update state with all location data - build from results for type safety
+      const newWeatherData = Object.fromEntries(
+        locationKeys.map((key, index) => [key, results[index]])
+      ) as Record<string, WeatherDataPoint[] | null>;
       setWeatherData(newWeatherData);
     } catch (err) {
       // If fetch fails, use mock data for demonstration purposes
