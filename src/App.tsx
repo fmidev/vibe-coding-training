@@ -129,10 +129,10 @@ function App() {
     }
 
     try {
-      // Get current time and one hour ahead for a near real-time query
+      // Get current time and 15 minutes ahead for a near real-time query
       const now = new Date();
-      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-      const datetime = `${now.toISOString()}/${oneHourLater.toISOString()}`;
+      const fifteenMinutesLater = new Date(now.getTime() + 15 * 60 * 1000);
+      const datetime = `${now.toISOString()}/${fifteenMinutesLater.toISOString()}`;
 
       const data = await getPositionData(
         'pal_skandinavia',
@@ -144,7 +144,8 @@ function App() {
         }
       ) as CoverageJSONResponse;
 
-      // Extract the first temperature value
+      // Extract the first temperature value (closest to current time)
+      // The API returns values in chronological order, so the first value represents the most current temperature
       if (data.ranges && data.ranges.Temperature && data.ranges.Temperature.values.length > 0) {
         const temp = data.ranges.Temperature.values[0];
         setCityTemperature(temp);
