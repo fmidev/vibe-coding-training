@@ -4,6 +4,9 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  Card,
+  CardContent,
+  Divider,
 } from '@mui/material';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -275,6 +278,103 @@ const ChristmasWeatherMaps: React.FC = () => {
     </Box>
   );
 
+  const renderCityCard = (weather: WeatherData, isChristmas: boolean) => (
+    <Card 
+      key={weather.location}
+      elevation={2}
+      sx={{ 
+        bgcolor: isChristmas ? '#e3f2fd' : 'white',
+        height: '100%'
+      }}
+    >
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          {weather.location}
+        </Typography>
+        <Box display="flex" alignItems="baseline" gap={1} mb={1}>
+          <Typography variant="h4" component="span" fontWeight="bold">
+            {weather.temperature.toFixed(1)}°C
+          </Typography>
+        </Box>
+        <Box display="flex" flexWrap="wrap" gap={1}>
+          <Box flex="1" minWidth="100px">
+            <Typography variant="body2" color="text.secondary">
+              ☁️ {weather.cloudCover.toFixed(0)}%
+            </Typography>
+          </Box>
+          <Box flex="1" minWidth="100px">
+            <Typography variant="body2" color="text.secondary">
+              💨 {weather.windSpeed.toFixed(1)} m/s
+            </Typography>
+          </Box>
+          <Box flex="1 0 100%">
+            <Typography variant="body2" color="text.secondary">
+              {isChristmas ? '❄️' : '🌧️'} {weather.precipitation.toFixed(1)} mm
+            </Typography>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
+  const renderTransformationCard = () => {
+    if (currentWeatherData.length === 0 || christmasWeatherData.length === 0) return null;
+    
+    // Calculate average changes
+    const avgTempChange = christmasWeatherData.reduce((sum, w, i) => 
+      sum + (w.temperature - currentWeatherData[i].temperature), 0) / currentWeatherData.length;
+    const avgCloudChange = christmasWeatherData.reduce((sum, w, i) => 
+      sum + (w.cloudCover - currentWeatherData[i].cloudCover), 0) / currentWeatherData.length;
+    const avgWindChange = christmasWeatherData.reduce((sum, w, i) => 
+      sum + (w.windSpeed - currentWeatherData[i].windSpeed), 0) / currentWeatherData.length;
+    const avgPrecipChange = christmasWeatherData.reduce((sum, w, i) => 
+      sum + (w.precipitation - currentWeatherData[i].precipitation), 0) / currentWeatherData.length;
+
+    return (
+      <Card elevation={3} sx={{ bgcolor: '#f5f5f5', p: 2 }}>
+        <Typography variant="h5" component="h3" gutterBottom fontWeight="bold">
+          Average Weather Transformations
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        
+        <Box display="flex" flexWrap="wrap" gap={2}>
+          <Box flex="1" minWidth="150px">
+            <Typography variant="body2" color="text.secondary">Temperature</Typography>
+            <Typography variant="h6" color="primary">
+              {avgTempChange > 0 ? '+' : ''}{avgTempChange.toFixed(1)}°C
+            </Typography>
+          </Box>
+          <Box flex="1" minWidth="150px">
+            <Typography variant="body2" color="text.secondary">Cloud Cover</Typography>
+            <Typography variant="h6" color="error">
+              +{avgCloudChange.toFixed(1)}%
+            </Typography>
+          </Box>
+          <Box flex="1" minWidth="150px">
+            <Typography variant="body2" color="text.secondary">Wind Speed</Typography>
+            <Typography variant="h6" color="primary">
+              {avgWindChange.toFixed(1)} m/s
+            </Typography>
+          </Box>
+          <Box flex="1" minWidth="150px">
+            <Typography variant="body2" color="text.secondary">Precipitation</Typography>
+            <Typography variant="h6" color="error">
+              +{avgPrecipChange.toFixed(1)} mm
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" color="text.secondary" display="block">
+            Transformation Rules: Temp -{TEMPERATURE_REDUCTION}°C (min {MIN_CHRISTMAS_TEMPERATURE}°C), 
+            Cloud min {MIN_CLOUD_COVER}%, Wind ×{WIND_SPEED_MULTIPLIER}, 
+            Precip ×{PRECIPITATION_MULTIPLIER} (min {MIN_PRECIPITATION}mm)
+          </Typography>
+        </Box>
+      </Card>
+    );
+  };
+
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h4" component="h2" gutterBottom fontWeight="bold">
@@ -297,11 +397,52 @@ const ChristmasWeatherMaps: React.FC = () => {
       )}
 
       {!loading && currentWeatherData.length > 0 && (
-        <Box display="flex" flexWrap="wrap" gap={3}>
-          {renderWeatherMap(currentWeatherData, 'Current Weather', 'current-map')}
-          {renderWeatherMap(christmasWeatherData, 'Christmas Weather ❄️🎄', 'christmas-map')}
-          {renderTransformationMap()}
-        </Box>
+        <>
+          {/* Maps Section */}
+          <Box display="flex" flexWrap="wrap" gap={3} mb={4}>
+            {renderWeatherMap(currentWeatherData, 'Current Weather', 'current-map')}
+            {renderWeatherMap(christmasWeatherData, 'Christmas Weather ❄️🎄', 'christmas-map')}
+            {renderTransformationMap()}
+          </Box>
+
+          {/* City Cards Section */}
+          <Typography variant="h5" component="h3" gutterBottom fontWeight="bold" sx={{ mt: 4 }}>
+            Detailed City Weather Data
+          </Typography>
+          
+          <Box display="flex" flexWrap="wrap" gap={3} mb={4}>
+            {/* Current Weather Cities */}
+            <Box flex="1" minWidth="300px">
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Current Weather - 8 Largest Cities
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={2}>
+                {currentWeatherData.map((weather) => (
+                  <Box key={weather.location} flex="1" minWidth="150px" maxWidth="200px">
+                    {renderCityCard(weather, false)}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Christmas Weather Cities */}
+            <Box flex="1" minWidth="300px">
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Christmas Weather - 8 Largest Cities
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={2}>
+                {christmasWeatherData.map((weather) => (
+                  <Box key={weather.location} flex="1" minWidth="150px" maxWidth="200px">
+                    {renderCityCard(weather, true)}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Transformation Summary Card */}
+          {renderTransformationCard()}
+        </>
       )}
     </Box>
   );
