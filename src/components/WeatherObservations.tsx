@@ -51,6 +51,11 @@ const WeatherObservations = () => {
         }
       ) as CoverageJSONResponse;
 
+      // Validate response has required data
+      if (!data || !data.ranges || !data.domain?.axes?.t) {
+        throw new Error('Invalid response from weather API');
+      }
+
       // Extract weather values
       const temperature = data.ranges.ta_pt1m_avg?.values[0] ?? null;
       const humidity = data.ranges.rh_pt1m_avg?.values[0] ?? null;
