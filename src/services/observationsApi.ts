@@ -21,6 +21,7 @@ export const GULF_OF_FINLAND_STATIONS: WeatherStation[] = [
   { fmisid: '100969', name: 'Inkoo Bågaskär', lon: 24.0141, lat: 59.9311 },
   { fmisid: '100997', name: 'Kirkkonummi Mäkiluoto', lon: 24.3502, lat: 59.9198 },
   { fmisid: '100996', name: 'Helsinki Harmaja', lon: 24.9754, lat: 60.1051 },
+  { fmisid: '151028', name: 'Helsinki Vuosaari satama', lon: 25.1959, lat: 60.2087 },
   { fmisid: '101022', name: 'Porvoo Kalbådagrund', lon: 25.5988, lat: 59.9857 },
   { fmisid: '101023', name: 'Porvoo Emäsalo', lon: 25.6255, lat: 60.2038 },
   { fmisid: '101039', name: 'Loviisa Orrengrund', lon: 26.4476, lat: 60.2748 },
