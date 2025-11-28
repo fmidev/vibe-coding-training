@@ -10,12 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
-interface TemperatureDataPoint {
-  time: string;
-  temperature: number;
-  formattedTime: string;
-}
+import type { TemperatureDataPoint } from '../types/temperature';
 
 interface TemperatureChartProps {
   data: TemperatureDataPoint[];

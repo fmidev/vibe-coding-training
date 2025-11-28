@@ -27,6 +27,7 @@ import {
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
 import TemperatureChart from './components/TemperatureChart';
+import type { TemperatureDataPoint } from './types/temperature';
 
 interface CoverageJSONResponse {
   type: string;
@@ -59,11 +60,11 @@ interface CoverageJSONResponse {
   };
 }
 
-interface TemperatureDataPoint {
-  time: string;
-  temperature: number;
-  formattedTime: string;
-}
+// Constants for mock data generation
+const HOURS_IN_DAY = 24;
+const BASE_TEMPERATURE = 5;
+const TEMPERATURE_VARIATION = 3;
+const TEMPERATURE_NOISE = 1;
 
 console.log('App.tsx module loaded');
 
@@ -123,22 +124,20 @@ function App() {
       }
       
       setWeatherData(data);
-    } catch (err) {
+    } catch {
       // If API fails, generate mock data for demonstration
-      console.log('API unavailable, generating mock data for demonstration');
       const mockData: TemperatureDataPoint[] = [];
       const startDate = new Date();
       
-      for (let i = 0; i < 24; i++) {
+      for (let i = 0; i < HOURS_IN_DAY; i++) {
         const time = new Date(startDate.getTime() + i * 60 * 60 * 1000);
-        // Generate realistic temperature variation
-        const baseTemp = 5;
-        const variation = Math.sin(i / 24 * Math.PI * 2) * 3;
-        const randomNoise = (Math.random() - 0.5) * 1;
+        // Generate realistic temperature variation using a sine wave pattern
+        const variation = Math.sin(i / HOURS_IN_DAY * Math.PI * 2) * TEMPERATURE_VARIATION;
+        const randomNoise = (Math.random() - 0.5) * TEMPERATURE_NOISE;
         
         mockData.push({
           time: time.toISOString(),
-          temperature: baseTemp + variation + randomNoise,
+          temperature: BASE_TEMPERATURE + variation + randomNoise,
           formattedTime: time.toLocaleTimeString('en-GB', { 
             hour: '2-digit', 
             minute: '2-digit'
