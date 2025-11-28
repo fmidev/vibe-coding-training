@@ -69,18 +69,26 @@ function App() {
       console.log('Transformed weather data:', transformedData);
       setWeatherData(transformedData);
     } catch (err) {
-      // If fetch fails, use mock data for demonstration
+      // If fetch fails, use mock data for demonstration purposes
+      // This allows the UI to be tested when the API is unavailable
       console.warn('Using mock data due to fetch error:', err);
+      
+      // Generate realistic mock weather data for Helsinki winter conditions
       const now = new Date();
       const mockData: WeatherDataPoint[] = [];
+      const MOCK_BASE_TEMP = -2; // Base temperature in °C (typical Helsinki winter)
+      const MOCK_TEMP_VARIATION = 3; // Temperature variation range in °C
+      const MOCK_BASE_WIND = 5; // Base wind speed in m/s
+      const MOCK_WIND_VARIATION = 2; // Wind speed variation in m/s
+      
       for (let i = 0; i < 8; i++) {
         const time = new Date(now.getTime() + i * 60 * 60 * 1000);
         mockData.push({
           time: time.toISOString(),
           timestamp: time.getTime(),
-          temperature: -2 + Math.sin(i / 2) * 3,
-          windSpeed: 5 + Math.cos(i / 3) * 2,
-          weatherSymbol: i === 0 ? 2 : i < 3 ? 3 : i < 5 ? 31 : 21,
+          temperature: MOCK_BASE_TEMP + Math.sin(i / 2) * MOCK_TEMP_VARIATION,
+          windSpeed: MOCK_BASE_WIND + Math.cos(i / 3) * MOCK_WIND_VARIATION,
+          weatherSymbol: i === 0 ? 2 : i < 3 ? 3 : i < 5 ? 31 : 21, // Partly cloudy, cloudy, rain, showers
         });
       }
       setWeatherData(mockData);

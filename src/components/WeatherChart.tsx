@@ -18,7 +18,7 @@ interface WeatherChartProps {
 
 const WeatherChart: FC<WeatherChartProps> = ({ data }) => {
   const chartData = data.map((point) => ({
-    time: new Date(point.time).toLocaleTimeString('en-GB', {
+    time: new Date(point.time).toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
     }),
