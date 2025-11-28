@@ -16,6 +16,7 @@ import {
 import { CloudQueue } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
 import { getActivitySuggestion } from './utils/activitySuggestions';
+import ActivityMap from './components/ActivityMap';
 
 interface CoverageJSONResponse {
   type: string;
@@ -171,6 +172,20 @@ function App() {
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Stack spacing={4}>
+          {/* Activity Map Widget */}
+          <Card elevation={3}>
+            <CardContent>
+              <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                🗺️ Finland Activity Map
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Activity suggestions for major cities across Finland based on current weather
+              </Typography>
+              <ActivityMap />
+            </CardContent>
+          </Card>
+
           {/* Activity Forecast Widget */}
           <Card elevation={3}>
             <CardContent>
