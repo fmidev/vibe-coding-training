@@ -10,6 +10,7 @@ import {
   Alert,
   CircularProgress,
   Paper,
+  Autocomplete,
 } from '@mui/material';
 import { getTodayDate, getAverageTemperature } from '../services/temperatureApi';
 import FinlandMap from './FinlandMap';
@@ -34,10 +35,45 @@ const FINLAND_LOCATIONS: LocationData[] = [
   { name: 'Joensuu', lat: 62.60, lon: 29.76 },
 ];
 
+// Extended list of Finnish cities and municipalities for search
+const SEARCHABLE_LOCATIONS: LocationData[] = [
+  { name: 'Helsinki', lat: 60.17, lon: 24.94 },
+  { name: 'Espoo', lat: 60.21, lon: 24.66 },
+  { name: 'Vantaa', lat: 60.29, lon: 25.04 },
+  { name: 'Turku', lat: 60.45, lon: 22.27 },
+  { name: 'Tampere', lat: 61.50, lon: 23.79 },
+  { name: 'Oulu', lat: 65.01, lon: 25.47 },
+  { name: 'Rovaniemi', lat: 66.50, lon: 25.73 },
+  { name: 'Jyväskylä', lat: 62.24, lon: 25.75 },
+  { name: 'Kuopio', lat: 62.89, lon: 27.68 },
+  { name: 'Lappeenranta', lat: 61.06, lon: 28.19 },
+  { name: 'Vaasa', lat: 63.10, lon: 21.62 },
+  { name: 'Joensuu', lat: 62.60, lon: 29.76 },
+  { name: 'Lahti', lat: 60.98, lon: 25.66 },
+  { name: 'Pori', lat: 61.48, lon: 21.78 },
+  { name: 'Kokkola', lat: 63.84, lon: 23.13 },
+  { name: 'Seinäjoki', lat: 62.79, lon: 22.84 },
+  { name: 'Rauma', lat: 61.13, lon: 21.51 },
+  { name: 'Järvenpää', lat: 60.47, lon: 25.09 },
+  { name: 'Porvoo', lat: 60.39, lon: 25.66 },
+  { name: 'Kotka', lat: 60.47, lon: 26.95 },
+  { name: 'Hämeenlinna', lat: 60.99, lon: 24.46 },
+  { name: 'Mikkeli', lat: 61.69, lon: 27.27 },
+  { name: 'Salo', lat: 60.38, lon: 23.13 },
+  { name: 'Kajaani', lat: 64.23, lon: 27.73 },
+  { name: 'Savonlinna', lat: 61.87, lon: 28.88 },
+  { name: 'Kemi', lat: 65.74, lon: 24.56 },
+  { name: 'Tornio', lat: 65.85, lon: 24.15 },
+  { name: 'Imatra', lat: 61.17, lon: 28.76 },
+  { name: 'Varkaus', lat: 62.32, lon: 27.87 },
+  { name: 'Iisalmi', lat: 63.56, lon: 27.19 },
+];
+
 const DailyAverageTemperature: FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
   const [customLat, setCustomLat] = useState<string>('');
   const [customLon, setCustomLon] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<LocationData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locationData, setLocationData] = useState<LocationData[]>([]);
@@ -69,7 +105,11 @@ const DailyAverageTemperature: FC = () => {
       setLocationData(results);
 
       // Fetch temperature for custom location if provided
-      if (customLat && customLon) {
+      // Priority: 1. Selected city, 2. Custom coordinates
+      if (selectedCity) {
+        const temp = await getAverageTemperature(selectedCity.lat, selectedCity.lon, selectedDate);
+        setCustomLocationTemp(temp);
+      } else if (customLat && customLon) {
         const lat = parseFloat(customLat);
         const lon = parseFloat(customLon);
 
@@ -122,22 +162,65 @@ const DailyAverageTemperature: FC = () => {
               <Typography variant="subtitle1" gutterBottom>
                 Valinnainen: Tarkista tietty sijainti
               </Typography>
+              
+              {/* City name search */}
+              <Autocomplete
+                options={SEARCHABLE_LOCATIONS}
+                getOptionLabel={(option) => option.name}
+                value={selectedCity}
+                onChange={(_, newValue) => {
+                  setSelectedCity(newValue);
+                  // Clear coordinate inputs when city is selected
+                  if (newValue) {
+                    setCustomLat('');
+                    setCustomLon('');
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Kaupunki tai kunta (esim. Helsinki)"
+                    placeholder="Kirjoita kaupungin nimi..."
+                  />
+                )}
+                sx={{ mb: 2 }}
+                fullWidth
+              />
+
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                tai anna koordinaatit:
+              </Typography>
+              
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
                   label="Leveyspiiri (esim. 60.17)"
                   type="number"
                   value={customLat}
-                  onChange={(e) => setCustomLat(e.target.value)}
+                  onChange={(e) => {
+                    setCustomLat(e.target.value);
+                    // Clear city selection when coordinates are entered
+                    if (e.target.value) {
+                      setSelectedCity(null);
+                    }
+                  }}
                   fullWidth
                   inputProps={{ step: '0.01' }}
+                  disabled={selectedCity !== null}
                 />
                 <TextField
                   label="Pituuspiiri (esim. 24.94)"
                   type="number"
                   value={customLon}
-                  onChange={(e) => setCustomLon(e.target.value)}
+                  onChange={(e) => {
+                    setCustomLon(e.target.value);
+                    // Clear city selection when coordinates are entered
+                    if (e.target.value) {
+                      setSelectedCity(null);
+                    }
+                  }}
                   fullWidth
                   inputProps={{ step: '0.01' }}
+                  disabled={selectedCity !== null}
                 />
               </Stack>
             </Box>
@@ -255,15 +338,26 @@ const DailyAverageTemperature: FC = () => {
         </Card>
       )}
 
-      {customLocationTemp !== null && customLat && customLon && (
+      {customLocationTemp !== null && (selectedCity || (customLat && customLon)) && (
         <Card>
           <CardContent>
             <Typography variant="h5" gutterBottom>
               Valittu sijainti
             </Typography>
-            <Typography variant="body1">
-              Koordinaatit: {customLat}, {customLon}
-            </Typography>
+            {selectedCity ? (
+              <>
+                <Typography variant="body1">
+                  Kaupunki: {selectedCity.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Koordinaatit: {selectedCity.lat.toFixed(2)}, {selectedCity.lon.toFixed(2)}
+                </Typography>
+              </>
+            ) : (
+              <Typography variant="body1">
+                Koordinaatit: {customLat}, {customLon}
+              </Typography>
+            )}
             <Typography variant="h4" sx={{ mt: 2 }}>
               Keskilämpötila: {customLocationTemp.toFixed(1)}°C
             </Typography>
