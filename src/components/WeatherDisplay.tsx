@@ -186,12 +186,69 @@ const CityWeather = ({ city, coords }: CityWeatherProps) => {
   const currentWind = weatherData.windSpeed[0];
   const currentCloud = weatherData.cloudCover[0];
 
+  // Fun weather emoji based on conditions!
+  const getWeatherEmoji = () => {
+    if (currentTemp < -10) return '🥶';
+    if (currentTemp < 0) return '❄️';
+    if (currentTemp < 10) return '🧊';
+    if (currentTemp < 20) return '😊';
+    if (currentTemp < 25) return '☀️';
+    return '🔥';
+  };
+
+  const getCloudEmoji = () => {
+    if (currentCloud < 20) return '☀️';
+    if (currentCloud < 50) return '⛅';
+    if (currentCloud < 80) return '☁️';
+    return '🌧️';
+  };
+
   return (
-    <Card sx={{ height: '100%', bgcolor: 'primary.light', color: 'white' }}>
+    <Card sx={{ 
+      height: '100%', 
+      bgcolor: 'primary.light', 
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'transform 0.3s ease',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: 6,
+      }
+    }}>
+      {/* Fun animated weather emoji in background */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: -20,
+          right: -20,
+          fontSize: '120px',
+          opacity: 0.15,
+          animation: 'float 3s ease-in-out infinite',
+          '@keyframes float': {
+            '0%, 100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-20px)' },
+          },
+        }}
+      >
+        {getCloudEmoji()}
+      </Box>
       <CardContent>
-        <Typography variant="h5" component="h2" gutterBottom fontWeight="bold">
-          {city}
-        </Typography>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="h5" component="h2" fontWeight="bold">
+            {city}
+          </Typography>
+          {/* Fun temperature emoji */}
+          <Typography variant="h4" sx={{ 
+            animation: 'pulse 2s ease-in-out infinite',
+            '@keyframes pulse': {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.1)' },
+            },
+          }}>
+            {getWeatherEmoji()}
+          </Typography>
+        </Stack>
         
         <Stack spacing={2}>
           {/* Current Weather */}
