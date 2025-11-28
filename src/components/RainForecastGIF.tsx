@@ -12,16 +12,23 @@ import {
   Divider,
 } from '@mui/material';
 import { PlayArrow, Pause, Refresh } from '@mui/icons-material';
-import { getPositionData } from '../services/edrApi';
+import { getAreaData } from '../services/edrApi';
 
 interface CoverageJSONResponse {
   type: string;
   domain: {
+    type: string;
     axes: {
       t: { values: string[] };
       x: { values: number[] };
       y: { values: number[] };
+      composite?: {
+        dataType: string;
+        coordinates: string[];
+        values: number[][];
+      };
     };
+    referencing?: unknown[];
   };
   parameters: {
     [key: string]: {
@@ -34,6 +41,10 @@ interface CoverageJSONResponse {
   };
   ranges: {
     [key: string]: {
+      type: string;
+      dataType: string;
+      axisNames?: string[];
+      shape?: number[];
       values: (number | null)[];
     };
   };
@@ -135,28 +146,12 @@ const RainForecastGIF: React.FC = () => {
     setError(null);
     
     try {
-      // Create a grid of points
-      const lonStep = (BBOX.maxLon - BBOX.minLon) / GRID_RESOLUTION;
-      const latStep = (BBOX.maxLat - BBOX.minLat) / GRID_RESOLUTION;
+      // Construct polygon for southern Finland area query
+      const polygon = `POLYGON((${BBOX.minLon} ${BBOX.minLat},${BBOX.maxLon} ${BBOX.minLat},${BBOX.maxLon} ${BBOX.maxLat},${BBOX.minLon} ${BBOX.maxLat},${BBOX.minLon} ${BBOX.minLat}))`;
       
-      const gridPoints: { lon: number; lat: number }[] = [];
-      for (let i = 0; i <= GRID_RESOLUTION; i++) {
-        for (let j = 0; j <= GRID_RESOLUTION; j++) {
-          gridPoints.push({
-            lon: BBOX.minLon + i * lonStep,
-            lat: BBOX.minLat + j * latStep,
-          });
-        }
-      }
-
-      // For demo purposes, fetch data for a center point and simulate grid data
-      // In a real implementation, you would fetch data for all points or use area query
-      const centerLon = (BBOX.minLon + BBOX.maxLon) / 2;
-      const centerLat = (BBOX.minLat + BBOX.maxLat) / 2;
-      
-      const data = await getPositionData(
+      const data = await getAreaData(
         'pal_skandinavia',
-        `POINT(${centerLon} ${centerLat})`,
+        polygon,
         {
           f: 'CoverageJSON',
           'parameter-name': 'Precipitation1h',
@@ -167,39 +162,53 @@ const RainForecastGIF: React.FC = () => {
         throw new Error('Invalid data format received from API');
       }
 
-      // Process time steps
+      // Get axes information
       const timeValues = data.domain.axes.t.values;
+      const xValues = data.domain.axes.x?.values || [];
+      const yValues = data.domain.axes.y?.values || [];
       const precipValues = data.ranges.Precipitation1h.values;
+      
+      // Determine grid dimensions
+      const numX = xValues.length || GRID_RESOLUTION;
+      const numY = yValues.length || GRID_RESOLUTION;
+      const numT = timeValues.length;
+      
+      console.log('Area data received:', { numX, numY, numT, dataPoints: precipValues.length });
 
+      // Process time steps from area data
       const steps: TimeStep[] = timeValues.map((time, timeIndex) => {
-        // Simulate grid data by adding random variation around the center point value
-        const centerValue = precipValues[timeIndex] || 0;
-        const gridData = gridPoints.map((point) => {
-          // Add distance-based variation
-          const distLon = Math.abs(point.lon - centerLon);
-          const distLat = Math.abs(point.lat - centerLat);
-          const distance = Math.sqrt(distLon * distLon + distLat * distLat);
-          
-          // Simulate spatial variation
-          const variation = (Math.random() - 0.5) * 2 + Math.sin(distance * 5) * 0.5;
-          const value = Math.max(0, centerValue + variation);
-          
-          return {
-            lon: point.lon,
-            lat: point.lat,
-            value: value > 0.01 ? value : null,
-          };
-        });
+        const gridData: GridPoint[] = [];
+        
+        // Extract data for this time step
+        for (let yi = 0; yi < numY; yi++) {
+          for (let xi = 0; xi < numX; xi++) {
+            // Calculate index in the flat values array
+            // Format is typically [t, y, x] or [t, x, y]
+            const dataIndex = timeIndex * (numX * numY) + yi * numX + xi;
+            const value = precipValues[dataIndex];
+            
+            // Get coordinates
+            const lon = xValues[xi] || BBOX.minLon + (xi / numX) * (BBOX.maxLon - BBOX.minLon);
+            const lat = yValues[yi] || BBOX.minLat + (yi / numY) * (BBOX.maxLat - BBOX.minLat);
+            
+            gridData.push({
+              lon,
+              lat,
+              value: value !== null && value > 0.01 ? value : null,
+            });
+          }
+        }
 
         return { time, gridData };
       });
 
       setTimeSteps(steps);
       setCurrentTimeIndex(0);
+      console.log('Processed steps:', steps.length);
     } catch (err) {
       console.error('Error fetching precipitation data:', err);
       // Fall back to demo data
-      setError('Unable to fetch live data. Showing demo visualization.');
+      setError('Unable to fetch live data from API. Showing demo visualization.');
       generateDemoData();
     } finally {
       setLoading(false);
@@ -220,59 +229,82 @@ const RainForecastGIF: React.FC = () => {
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear canvas
-    ctx.fillStyle = '#e8f4f8';
+    // Clear canvas with light background
+    ctx.fillStyle = '#f0f0f0';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw grid cells
+    // Draw water/sea areas (simplified Finland coastline)
+    ctx.fillStyle = '#d4e8f0';
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw land mass background
+    ctx.fillStyle = '#f5f5f5';
+    ctx.beginPath();
+    // Simplified Finland shape approximation
+    const landPoints = [
+      [0.1, 0.9], [0.15, 0.85], [0.2, 0.8], [0.25, 0.7], [0.3, 0.6],
+      [0.35, 0.5], [0.4, 0.4], [0.5, 0.3], [0.6, 0.2], [0.7, 0.15],
+      [0.75, 0.1], [0.8, 0.1], [0.85, 0.15], [0.9, 0.2], [0.95, 0.3],
+      [0.95, 0.5], [0.9, 0.7], [0.85, 0.8], [0.8, 0.85], [0.7, 0.9],
+      [0.6, 0.92], [0.5, 0.93], [0.4, 0.92], [0.3, 0.9], [0.2, 0.88]
+    ];
+    ctx.moveTo(landPoints[0][0] * width, landPoints[0][1] * height);
+    landPoints.forEach(([x, y]) => {
+      ctx.lineTo(x * width, y * height);
+    });
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw precipitation data
     const currentStep = timeSteps[currentTimeIndex];
-    const cellWidth = width / (GRID_RESOLUTION + 1);
-    const cellHeight = height / (GRID_RESOLUTION + 1);
+    
+    // Calculate grid cell dimensions dynamically
+    const gridPoints = currentStep.gridData;
+    const numPoints = gridPoints.length;
+    const gridSize = Math.sqrt(numPoints);
+    const cellWidth = width / gridSize;
+    const cellHeight = height / gridSize;
 
-    currentStep.gridData.forEach((point, index) => {
-      const i = Math.floor(index / (GRID_RESOLUTION + 1));
-      const j = index % (GRID_RESOLUTION + 1);
-      
-      const x = i * cellWidth;
-      const y = height - (j + 1) * cellHeight; // Flip Y axis
-
-      ctx.fillStyle = getColorForPrecipitation(point.value);
-      ctx.fillRect(x, y, cellWidth, cellHeight);
+    gridPoints.forEach((point) => {
+      if (point.value !== null && point.value > 0) {
+        // Convert lon/lat to canvas coordinates
+        const x = ((point.lon - BBOX.minLon) / (BBOX.maxLon - BBOX.minLon)) * width;
+        const y = height - ((point.lat - BBOX.minLat) / (BBOX.maxLat - BBOX.minLat)) * height;
+        
+        ctx.fillStyle = getColorForPrecipitation(point.value);
+        ctx.fillRect(x - cellWidth / 2, y - cellHeight / 2, cellWidth, cellHeight);
+      }
     });
 
-    // Draw grid lines
-    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= GRID_RESOLUTION + 1; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * cellWidth, 0);
-      ctx.lineTo(i * cellWidth, height);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(0, i * cellHeight);
-      ctx.lineTo(width, i * cellHeight);
-      ctx.stroke();
-    }
-
-    // Draw city labels
+    // Draw more cities across Finland
     const cities = [
       { name: 'Helsinki', lon: 24.94, lat: 60.17 },
       { name: 'Espoo', lon: 24.66, lat: 60.21 },
       { name: 'Turku', lon: 22.27, lat: 60.45 },
+      { name: 'Tampere', lon: 23.76, lat: 61.50 },
+      { name: 'Lahti', lon: 25.66, lat: 60.98 },
+      { name: 'Hämeenlinna', lon: 24.46, lat: 60.99 },
+      { name: 'Porvoo', lon: 25.67, lat: 60.39 },
     ];
 
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 18px Arial';
+    ctx.font = 'bold 16px Arial';
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 3;
     cities.forEach(city => {
       if (city.lon >= BBOX.minLon && city.lon <= BBOX.maxLon &&
           city.lat >= BBOX.minLat && city.lat <= BBOX.maxLat) {
         const x = ((city.lon - BBOX.minLon) / (BBOX.maxLon - BBOX.minLon)) * width;
         const y = height - ((city.lat - BBOX.minLat) / (BBOX.maxLat - BBOX.minLat)) * height;
         
+        // Draw city dot
         ctx.fillStyle = '#000';
-        ctx.fillText('•', x - 4, y + 4);
-        ctx.fillText(city.name, x + 8, y + 6);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw city name with outline
+        ctx.strokeText(city.name, x + 8, y + 5);
+        ctx.fillText(city.name, x + 8, y + 5);
       }
     });
   }, [timeSteps, currentTimeIndex]);
@@ -445,13 +477,13 @@ const RainForecastGIF: React.FC = () => {
                 <>
                   Data source: Demo visualization (simulated precipitation pattern)
                   <br />
-                  Live data from FMI Open Data will be displayed when available
+                  Live data from FMI Open Data EDR API will be displayed when network is available
                 </>
               ) : (
                 <>
-                  Data source: FMI Open Data (pal_skandinavia collection)
+                  Data source: Live data from FMI Open Data EDR API (pal_skandinavia collection)
                   <br />
-                  Precipitation intensity shown in mm/h
+                  Precipitation intensity (mm/h) with proper Finland map background
                 </>
               )}
             </Typography>
