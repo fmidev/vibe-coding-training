@@ -325,14 +325,33 @@ const CityWeather = ({ city, coords }: CityWeatherProps) => {
 };
 
 const WeatherDisplay = () => {
+  // Random Finnish cities with their coordinates
+  const randomCities = [
+    { name: 'Tampere', coords: 'POINT(23.76 61.50)' },
+    { name: 'Oulu', coords: 'POINT(25.47 65.01)' },
+    { name: 'Jyväskylä', coords: 'POINT(25.74 62.24)' },
+    { name: 'Lahti', coords: 'POINT(25.66 60.98)' },
+    { name: 'Kuopio', coords: 'POINT(27.68 62.89)' },
+    { name: 'Pori', coords: 'POINT(21.79 61.49)' },
+    { name: 'Joensuu', coords: 'POINT(29.76 62.60)' },
+    { name: 'Lappeenranta', coords: 'POINT(28.19 61.06)' },
+  ];
+
+  // Pick a random city (deterministic based on date so it changes daily)
+  const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const randomCity = randomCities[dayOfYear % randomCities.length];
+
   return (
     <Box sx={{ py: 3, bgcolor: 'grey.100' }}>
       <Grid container spacing={3} maxWidth="lg" sx={{ mx: 'auto', px: 2 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <CityWeather city="Helsinki" coords="POINT(24.94 60.17)" />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <CityWeather city="Turku" coords="POINT(22.27 60.45)" />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <CityWeather city={randomCity.name} coords={randomCity.coords} />
         </Grid>
       </Grid>
     </Box>
