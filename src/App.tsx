@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
+import MapView from './components/MapView';
 
 interface CoverageJSONResponse {
   type: string;
@@ -90,6 +91,36 @@ function App() {
       
       setWeatherData(data);
     } catch (err) {
+      // Use mock data as fallback when API is not accessible
+      console.log('Using mock data as fallback');
+      const mockData: CoverageJSONResponse = {
+        type: 'Coverage',
+        domain: {
+          axes: {
+            t: { values: ['2025-11-28T12:00:00Z', '2025-11-28T13:00:00Z', '2025-11-28T14:00:00Z', '2025-11-28T15:00:00Z'] }
+          }
+        },
+        parameters: {
+          Temperature: {
+            unit: { symbol: '°C' },
+            observedProperty: { label: { fi: 'Temperature' } }
+          },
+          WindSpeedMS: {
+            unit: { symbol: 'm/s' },
+            observedProperty: { label: { fi: 'Wind Speed' } }
+          },
+          TotalCloudCover: {
+            unit: { symbol: '%' },
+            observedProperty: { label: { fi: 'Cloud Cover' } }
+          }
+        },
+        ranges: {
+          Temperature: { values: [3.2, 3.5, 3.8, 4.1] },
+          WindSpeedMS: { values: [4.2, 4.5, 4.8, 5.1] },
+          TotalCloudCover: { values: [65, 70, 75, 80] }
+        }
+      };
+      setWeatherData(mockData);
       setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
       console.error('Error fetching weather data:', err);
     } finally {
@@ -341,12 +372,26 @@ function App() {
               {error && (
                 <Alert severity="info" sx={{ mb: 2 }}>
                   Unable to fetch live data from the API. This could be due to network restrictions or the API being temporarily unavailable.
-                  When the API is accessible, you'll see a table here with real-time weather parameters and their values.
+                  Displaying mock data for demonstration purposes.
                 </Alert>
               )}
 
               {weatherData && !loading && (
                 <>
+                  {/* Map View Section */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Location Map
+                    </Typography>
+                    <MapView
+                      latitude={59.913}
+                      longitude={10.752}
+                      locationName="Oslo, Norway"
+                      temperature={weatherData.ranges.Temperature?.values[0]}
+                      temperatureUnit="°C"
+                    />
+                  </Box>
+
                   <TableContainer component={Paper} sx={{ mb: 2 }}>
                     <Table size="small">
                       <TableHead>
