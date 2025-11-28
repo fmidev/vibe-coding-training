@@ -234,31 +234,66 @@ const RainForecastGIF: React.FC = () => {
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear canvas with light background
-    ctx.fillStyle = '#f0f0f0';
+    // Draw water/sea background
+    ctx.fillStyle = '#b8d4e8';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw water/sea areas (simplified Finland coastline)
-    ctx.fillStyle = '#d4e8f0';
-    ctx.fillRect(0, 0, width, height);
+    // Helper function to convert lon/lat to canvas coordinates
+    const toCanvasX = (lon: number) => ((lon - BBOX.minLon) / (BBOX.maxLon - BBOX.minLon)) * width;
+    const toCanvasY = (lat: number) => height - ((lat - BBOX.minLat) / (BBOX.maxLat - BBOX.minLat)) * height;
 
-    // Draw land mass background
-    ctx.fillStyle = '#f5f5f5';
-    ctx.beginPath();
-    // Simplified Finland shape approximation
-    const landPoints = [
-      [0.1, 0.9], [0.15, 0.85], [0.2, 0.8], [0.25, 0.7], [0.3, 0.6],
-      [0.35, 0.5], [0.4, 0.4], [0.5, 0.3], [0.6, 0.2], [0.7, 0.15],
-      [0.75, 0.1], [0.8, 0.1], [0.85, 0.15], [0.9, 0.2], [0.95, 0.3],
-      [0.95, 0.5], [0.9, 0.7], [0.85, 0.8], [0.8, 0.85], [0.7, 0.9],
-      [0.6, 0.92], [0.5, 0.93], [0.4, 0.92], [0.3, 0.9], [0.2, 0.88]
+    // Draw more accurate Finland coastline for southern Finland region
+    // This includes the major coastline and some larger islands
+    ctx.fillStyle = '#e8e8e8';
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+
+    // Main coastline of southern Finland (simplified but more accurate)
+    const mainCoastline = [
+      [22.0, 59.8], [22.2, 59.85], [22.4, 59.9], [22.6, 60.0], [22.8, 60.1],
+      [23.0, 60.15], [23.2, 60.2], [23.4, 60.25], [23.6, 60.3], [23.8, 60.35],
+      [24.0, 60.4], [24.2, 60.42], [24.4, 60.45], [24.6, 60.48], [24.8, 60.5],
+      [25.0, 60.5], [25.2, 60.48], [25.4, 60.45], [25.6, 60.4], [25.8, 60.35],
+      [26.0, 60.3], [26.0, 60.5], [26.0, 60.7], [26.0, 60.9], [26.0, 61.0],
+      [26.0, 61.2], [26.0, 61.4], [25.8, 61.45], [25.6, 61.48], [25.4, 61.5],
+      [25.2, 61.5], [25.0, 61.48], [24.8, 61.45], [24.6, 61.4], [24.4, 61.35],
+      [24.2, 61.3], [24.0, 61.25], [23.8, 61.2], [23.6, 61.15], [23.4, 61.1],
+      [23.2, 61.05], [23.0, 61.0], [22.8, 60.95], [22.6, 60.9], [22.4, 60.85],
+      [22.2, 60.8], [22.0, 60.7], [22.0, 60.5], [22.0, 60.3], [22.0, 60.1], [22.0, 59.8]
     ];
-    ctx.moveTo(landPoints[0][0] * width, landPoints[0][1] * height);
-    landPoints.forEach(([x, y]) => {
-      ctx.lineTo(x * width, y * height);
+
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(mainCoastline[0][0]), toCanvasY(mainCoastline[0][1]));
+    mainCoastline.forEach(([lon, lat]) => {
+      ctx.lineTo(toCanvasX(lon), toCanvasY(lat));
     });
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+
+    // Draw southern archipelago islands
+    const islands = [
+      // Larger islands in the archipelago
+      [[22.5, 60.0], [22.6, 60.0], [22.6, 60.05], [22.5, 60.05]],
+      [[22.8, 60.05], [22.9, 60.05], [22.9, 60.1], [22.8, 60.1]],
+      [[23.2, 60.1], [23.3, 60.1], [23.3, 60.15], [23.2, 60.15]],
+      [[23.5, 60.15], [23.6, 60.15], [23.6, 60.2], [23.5, 60.2]],
+      [[24.0, 60.2], [24.1, 60.2], [24.1, 60.25], [24.0, 60.25]],
+      [[24.5, 60.2], [24.6, 60.2], [24.6, 60.25], [24.5, 60.25]],
+      [[25.0, 60.15], [25.1, 60.15], [25.1, 60.2], [25.0, 60.2]],
+      [[25.5, 60.1], [25.6, 60.1], [25.6, 60.15], [25.5, 60.15]],
+    ];
+
+    islands.forEach((island) => {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(island[0][0]), toCanvasY(island[0][1]));
+      island.forEach(([lon, lat]) => {
+        ctx.lineTo(toCanvasX(lon), toCanvasY(lat));
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
 
     // Draw precipitation data
     const currentStep = timeSteps[currentTimeIndex];
