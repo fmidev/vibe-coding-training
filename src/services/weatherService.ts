@@ -4,7 +4,9 @@
 
 import { getPositionData } from './edrApi';
 import type { CoverageJSONResponse } from '../types/weather';
-import { calculateWeatherSymbolFromCloudCover } from '../utils/weatherUtils';
+import { calculateWeatherSymbolFromCloudCover, formatCoordinates } from '../utils/weatherUtils';
+
+const DEFAULT_CLOUD_COVER = 50;
 
 export interface CurrentWeather {
   temperature: number;
@@ -32,7 +34,7 @@ export const fetchCurrentWeather = async (
   latitude: number,
   longitude: number
 ): Promise<CurrentWeather> => {
-  const coords = `POINT(${longitude.toFixed(4)} ${latitude.toFixed(4)})`;
+  const coords = formatCoordinates(latitude, longitude);
   
   // Get current time and 1 hour ahead
   const now = new Date();
@@ -74,7 +76,7 @@ export const fetch7DayForecast = async (
   latitude: number,
   longitude: number
 ): Promise<DailyForecast[]> => {
-  const coords = `POINT(${longitude.toFixed(4)} ${latitude.toFixed(4)})`;
+  const coords = formatCoordinates(latitude, longitude);
   
   // Get 7 days of data (8 days to ensure we have complete data)
   const now = new Date();
@@ -134,7 +136,7 @@ export const fetch7DayForecast = async (
         // Calculate average cloud cover for the day
         const avgCloud = clouds.length > 0
           ? clouds.reduce((a, b) => a + b, 0) / clouds.length
-          : 50;
+          : DEFAULT_CLOUD_COVER;
         
         const weatherSymbol = calculateWeatherSymbolFromCloudCover(avgCloud);
         
