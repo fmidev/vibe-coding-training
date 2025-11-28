@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
-import ChristmasWeather from './components/ChristmasWeather';
+import ChristmasWeatherMaps from './components/ChristmasWeatherMaps';
 
 interface CoverageJSONResponse {
   type: string;
@@ -130,7 +130,7 @@ function App() {
           </Box>
 
           {/* Christmas Weather Feature */}
-          <ChristmasWeather />
+          <ChristmasWeatherMaps />
 
           {/* Getting Started Card */}
           <Card elevation={3}>
