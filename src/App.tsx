@@ -391,45 +391,61 @@ function App() {
                 </Alert>
               )}
 
-              {weatherData && !loading && (
-                <>
-                  <Box sx={{ width: '100%', height: 400, mb: 2 }}>
-                    <LineChart
-                      xAxis={[{
-                        data: weatherData.domain.axes.t.values.map(time => new Date(time)),
-                        scaleType: 'time',
-                        label: 'Time',
-                        valueFormatter: (date) => new Date(date).toLocaleTimeString('en-GB', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        }),
-                      }]}
-                      yAxis={[{
-                        label: 'Temperature (°C)',
-                      }]}
-                      series={[
-                        {
-                          data: weatherData.ranges.Temperature.values,
-                          label: 'Temperature',
-                          color: '#1976d2',
-                          curve: 'linear',
-                          showMark: false,
-                        },
-                      ]}
-                      margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                      grid={{ vertical: true, horizontal: true }}
-                    />
-                  </Box>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
-                    onClick={fetchExampleWeatherData}
-                    disabled={loading}
-                  >
-                    Refresh Data
-                  </Button>
-                </>
-              )}
+              {weatherData && !loading && (() => {
+                // Find the temperature parameter key (case-insensitive)
+                const tempKey = Object.keys(weatherData.ranges).find(
+                  key => key.toLowerCase() === 'temperature'
+                ) || 'Temperature';
+                const temperatureData = weatherData.ranges[tempKey];
+                
+                if (!temperatureData || !temperatureData.values) {
+                  return (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      Unable to display chart: Temperature data is missing from the API response.
+                    </Alert>
+                  );
+                }
+                
+                return (
+                  <>
+                    <Box sx={{ width: '100%', height: 400, mb: 2 }}>
+                      <LineChart
+                        xAxis={[{
+                          data: weatherData.domain.axes.t.values.map(time => new Date(time)),
+                          scaleType: 'time',
+                          label: 'Time',
+                          valueFormatter: (date) => new Date(date).toLocaleTimeString('en-GB', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          }),
+                        }]}
+                        yAxis={[{
+                          label: 'Temperature (°C)',
+                        }]}
+                        series={[
+                          {
+                            data: temperatureData.values,
+                            label: 'Temperature',
+                            color: '#1976d2',
+                            curve: 'linear',
+                            showMark: false,
+                          },
+                        ]}
+                        margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                        grid={{ vertical: true, horizontal: true }}
+                      />
+                    </Box>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      onClick={fetchExampleWeatherData}
+                      disabled={loading}
+                    >
+                      Refresh Data
+                    </Button>
+                  </>
+                );
+              })()}
 
               <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
                 Available Parameters
