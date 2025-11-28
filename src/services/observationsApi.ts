@@ -65,14 +65,19 @@ interface CoverageJSONResponse {
 /**
  * Fetch latest observations for a specific station
  * @param fmisid - Station ID (FMI Station ID)
- * @param datetime - ISO datetime string (default: current hour)
+ * @param datetime - ISO datetime string or range (default: last hour)
  */
 export const getStationObservations = async (
   fmisid: string,
   datetime?: string
 ): Promise<ObservationData> => {
-  // Use current hour if datetime not provided
-  const dt = datetime || new Date().toISOString().split(':')[0] + ':00:00Z';
+  // Use last hour as time range if datetime not provided to get latest observation
+  let dt = datetime;
+  if (!dt) {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    dt = `${oneHourAgo.toISOString()}/${now.toISOString()}`;
+  }
   
   const params = new URLSearchParams({
     datetime: dt,
@@ -90,15 +95,36 @@ export const getStationObservations = async (
   const data = await response.json() as CoverageJSONResponse;
 
   // Extract values from the response
+  // Find the most recent time point where all parameters have non-null values
   const ranges = data.ranges;
-  const timestamp = data.domain.axes.t.values[0];
+  const timeValues = data.domain.axes.t.values;
+  
+  let selectedIndex = timeValues.length - 1;
+  
+  // Search backwards for the most recent complete observation
+  for (let i = timeValues.length - 1; i >= 0; i--) {
+    const hasAllValues = (
+      (ranges.ta_pt1m_avg?.values[i] !== null && ranges.ta_pt1m_avg?.values[i] !== undefined) ||
+      (ranges.ws_pt10m_avg?.values[i] !== null && ranges.ws_pt10m_avg?.values[i] !== undefined) ||
+      (ranges.wd_pt10m_avg?.values[i] !== null && ranges.wd_pt10m_avg?.values[i] !== undefined) ||
+      (ranges.wg_pt1h_max?.values[i] !== null && ranges.wg_pt1h_max?.values[i] !== undefined) ||
+      (ranges.pa_pt1m_avg?.values[i] !== null && ranges.pa_pt1m_avg?.values[i] !== undefined)
+    );
+    
+    if (hasAllValues) {
+      selectedIndex = i;
+      break;
+    }
+  }
+  
+  const timestamp = timeValues[selectedIndex];
 
   return {
-    temperature: ranges.ta_pt1m_avg?.values[0],
-    windSpeed: ranges.ws_pt10m_avg?.values[0],
-    windDirection: ranges.wd_pt10m_avg?.values[0],
-    gustSpeed: ranges.wg_pt1h_max?.values[0],
-    pressure: ranges.pa_pt1m_avg?.values[0],
+    temperature: ranges.ta_pt1m_avg?.values[selectedIndex],
+    windSpeed: ranges.ws_pt10m_avg?.values[selectedIndex],
+    windDirection: ranges.wd_pt10m_avg?.values[selectedIndex],
+    gustSpeed: ranges.wg_pt1h_max?.values[selectedIndex],
+    pressure: ranges.pa_pt1m_avg?.values[selectedIndex],
     timestamp,
   };
 };
