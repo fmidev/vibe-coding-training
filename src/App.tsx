@@ -25,20 +25,36 @@ const LOCATIONS = {
     name: 'Sodankylä',
     coords: 'POINT(26.6042 67.4180)',
   },
+  utsjoki: {
+    name: 'Utsjoki',
+    coords: 'POINT(27.0 69.9)',
+  },
+  kilpisjarvi: {
+    name: 'Kilpisjärvi',
+    coords: 'POINT(20.79 69.05)',
+  },
+  pello: {
+    name: 'Pello',
+    coords: 'POINT(23.97 66.77)',
+  },
 };
 
 console.log('App.tsx module loaded');
 
 function App() {
   console.log('App() function called - rendering component');
-  const [weatherDataHelsinki, setWeatherDataHelsinki] = useState<WeatherDataPoint[] | null>(null);
-  const [weatherDataSodankyla, setWeatherDataSodankyla] = useState<WeatherDataPoint[] | null>(null);
+  const [weatherData, setWeatherData] = useState<Record<string, WeatherDataPoint[] | null>>({
+    helsinki: null,
+    sodankyla: null,
+    utsjoki: null,
+    kilpisjarvi: null,
+    pello: null,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   console.log('App state:', { 
-    hasHelsinkiData: !!weatherDataHelsinki, 
-    hasSodankylaData: !!weatherDataSodankyla,
+    weatherData: Object.entries(weatherData).map(([key, data]) => ({ [key]: !!data })),
     loading, 
     error 
   });
@@ -84,21 +100,25 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      // Get current time and 7 hours ahead - shared across both locations
+      // Get current time and 7 hours ahead - shared across all locations
       const now = new Date();
       const sevenHoursLater = new Date(now.getTime() + 7 * 60 * 60 * 1000);
       
       const startTime = now.toISOString().split('.')[0] + 'Z';
       const endTime = sevenHoursLater.toISOString().split('.')[0] + 'Z';
 
-      // Fetch data for both locations in parallel with same time range
-      const [helsinkiData, sodankylaData] = await Promise.all([
-        fetchWeatherDataForLocation('helsinki', startTime, endTime),
-        fetchWeatherDataForLocation('sodankyla', startTime, endTime),
-      ]);
+      // Fetch data for all locations in parallel with same time range
+      const locationKeys = Object.keys(LOCATIONS) as Array<keyof typeof LOCATIONS>;
+      const results = await Promise.all(
+        locationKeys.map(key => fetchWeatherDataForLocation(key, startTime, endTime))
+      );
       
-      setWeatherDataHelsinki(helsinkiData);
-      setWeatherDataSodankyla(sodankylaData);
+      // Update state with all location data
+      const newWeatherData: Record<string, WeatherDataPoint[] | null> = {};
+      locationKeys.forEach((key, index) => {
+        newWeatherData[key] = results[index];
+      });
+      setWeatherData(newWeatherData);
     } catch (err) {
       // If fetch fails, use mock data for demonstration purposes
       // This allows the UI to be tested when the API is unavailable
@@ -125,8 +145,14 @@ function App() {
         return mockData;
       };
 
-      setWeatherDataHelsinki(generateMockData(-2)); // Helsinki winter: ~-2°C
-      setWeatherDataSodankyla(generateMockData(-10)); // Sodankylä winter: ~-10°C (colder)
+      // Generate mock data for all locations with appropriate temperatures
+      setWeatherData({
+        helsinki: generateMockData(-2),      // Helsinki: ~-2°C (southern, warmer)
+        sodankyla: generateMockData(-10),    // Sodankylä: ~-10°C (northern)
+        utsjoki: generateMockData(-15),      // Utsjoki: ~-15°C (far north, coldest)
+        kilpisjarvi: generateMockData(-12),  // Kilpisjärvi: ~-12°C (northern, high altitude)
+        pello: generateMockData(-8),         // Pello: ~-8°C (northern but lower latitude)
+      });
       setError(null); // Clear error when using mock data
     } finally {
       setLoading(false);
@@ -176,21 +202,16 @@ function App() {
             </Alert>
           )}
 
-          {/* Helsinki Weather Data Display */}
-          {weatherDataHelsinki && weatherDataHelsinki.length > 0 && !loading && (
-            <>
-              <CurrentWeather data={weatherDataHelsinki[0]} location={LOCATIONS.helsinki.name} />
-              <WeatherChart data={weatherDataHelsinki} />
-            </>
-          )}
-
-          {/* Sodankylä Weather Data Display */}
-          {weatherDataSodankyla && weatherDataSodankyla.length > 0 && !loading && (
-            <>
-              <CurrentWeather data={weatherDataSodankyla[0]} location={LOCATIONS.sodankyla.name} />
-              <WeatherChart data={weatherDataSodankyla} />
-            </>
-          )}
+          {/* Weather Data Display for All Locations */}
+          {!loading && Object.entries(LOCATIONS).map(([key, location]) => {
+            const data = weatherData[key];
+            return data && data.length > 0 ? (
+              <Box key={key}>
+                <CurrentWeather data={data[0]} location={location.name} />
+                <WeatherChart data={data} />
+              </Box>
+            ) : null;
+          })}
 
           {/* Footer */}
           <Box sx={{ textAlign: 'center', py: 4 }}>
