@@ -79,3 +79,24 @@ export const getPositionData = async (
   }
   return response.json();
 };
+
+/**
+ * Fetch data from an area query
+ * @param collectionId - Collection ID
+ * @param coords - Polygon coordinates in WKT format, e.g., "POLYGON((lon1 lat1, lon2 lat2, ...))"
+ * @param params - Additional query parameters
+ */
+export const getAreaData = async (
+  collectionId: string,
+  coords: string,
+  params?: Record<string, string>
+): Promise<unknown> => {
+  const queryParams = new URLSearchParams(params);
+  const url = `${EDR_BASE_URL}/collections/${collectionId}/area?coords=${encodeURIComponent(coords)}&${queryParams}`;
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch area data: ${response.statusText}`);
+  }
+  return response.json();
+};
