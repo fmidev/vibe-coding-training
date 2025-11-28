@@ -100,7 +100,7 @@ function App() {
       const mockTempValues: number[] = [];
       
       // Generate 24 hours of mock data (hourly intervals)
-      for (let i = 0; i <= 24; i++) {
+      for (let i = 0; i < 24; i++) {
         const time = new Date(now.getTime() + i * 60 * 60 * 1000);
         mockTimeValues.push(time.toISOString());
         // Generate realistic temperature curve (sine wave between 0-15°C)
