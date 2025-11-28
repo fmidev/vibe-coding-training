@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { type FC, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 interface LocationData {
@@ -13,25 +13,38 @@ interface FinlandMapProps {
   getTemperatureColor: (temp?: number) => string;
 }
 
+// Geographic bounds for Finland
+const GEO_BOUNDS = {
+  minLat: 59,
+  maxLat: 70,
+  minLon: 19,
+  maxLon: 32,
+} as const;
+
+// SVG dimensions
+const SVG_DIMENSIONS = {
+  width: 400,
+  height: 600,
+} as const;
+
+// Visual constants
+const MARKER_RADIUS = 20;
+const TEXT_COLOR_THRESHOLD = 15;
+
 const FinlandMap: FC<FinlandMapProps> = ({ locationData, getTemperatureColor }) => {
   // Convert geographic coordinates to SVG coordinates
-  // Finland approximately: lat 59-70, lon 19-32
   const latToY = (lat: number) => {
-    const minLat = 59;
-    const maxLat = 70;
-    const svgHeight = 600;
-    return svgHeight - ((lat - minLat) / (maxLat - minLat)) * svgHeight;
+    return SVG_DIMENSIONS.height - 
+      ((lat - GEO_BOUNDS.minLat) / (GEO_BOUNDS.maxLat - GEO_BOUNDS.minLat)) * SVG_DIMENSIONS.height;
   };
 
   const lonToX = (lon: number) => {
-    const minLon = 19;
-    const maxLon = 32;
-    const svgWidth = 400;
-    return ((lon - minLon) / (maxLon - minLon)) * svgWidth;
+    return ((lon - GEO_BOUNDS.minLon) / (GEO_BOUNDS.maxLon - GEO_BOUNDS.minLon)) * SVG_DIMENSIONS.width;
   };
 
-  // Simplified Finland outline (rough approximation)
-  const finlandOutline = `
+  // Memoize Finland outline path to avoid recalculation on every render
+  const finlandOutline = useMemo(() => {
+    return `
     M ${lonToX(21)} ${latToY(60)}
     L ${lonToX(22)} ${latToY(59.5)}
     L ${lonToX(23)} ${latToY(59.8)}
@@ -79,11 +92,12 @@ const FinlandMap: FC<FinlandMapProps> = ({ locationData, getTemperatureColor }) 
     L ${lonToX(21.5)} ${latToY(61)}
     L ${lonToX(21)} ${latToY(60.5)}
     Z
-  `;
+    `;
+  }, []);
 
   return (
     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 2 }}>
-      <svg width="400" height="600" viewBox="0 0 400 600" style={{ maxWidth: '100%', height: 'auto' }}>
+      <svg width={SVG_DIMENSIONS.width} height={SVG_DIMENSIONS.height} viewBox={`0 0 ${SVG_DIMENSIONS.width} ${SVG_DIMENSIONS.height}`} style={{ maxWidth: '100%', height: 'auto' }}>
         {/* Finland outline */}
         <path
           d={finlandOutline}
@@ -104,7 +118,7 @@ const FinlandMap: FC<FinlandMapProps> = ({ locationData, getTemperatureColor }) 
               <circle
                 cx={x}
                 cy={y}
-                r="20"
+                r={MARKER_RADIUS}
                 fill={color}
                 stroke="#333"
                 strokeWidth="2"
@@ -118,7 +132,7 @@ const FinlandMap: FC<FinlandMapProps> = ({ locationData, getTemperatureColor }) 
                 textAnchor="middle"
                 fontSize="12"
                 fontWeight="bold"
-                fill={location.temperature !== undefined && location.temperature > 15 ? 'black' : 'white'}
+                fill={location.temperature !== undefined && location.temperature > TEXT_COLOR_THRESHOLD ? 'black' : 'white'}
               >
                 {location.temperature !== undefined
                   ? `${location.temperature.toFixed(0)}°`
