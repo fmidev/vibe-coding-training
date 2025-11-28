@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
-import FiveDayForecast from './components/FiveDayForecast';
+import TemperatureChart from './components/TemperatureChart';
 import type { CoverageJSONResponse } from './types/weather';
 
 console.log('App.tsx module loaded');
@@ -89,8 +89,8 @@ function App() {
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Stack spacing={4}>
-          {/* 5-Day Weather Forecast Section */}
-          <FiveDayForecast />
+          {/* Temperature Chart Section */}
+          <TemperatureChart />
 
           {/* Welcome Section */}
           <Box>
