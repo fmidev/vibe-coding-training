@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Box,
@@ -37,20 +37,36 @@ interface CoverageJSONResponse {
   };
   parameters: {
     [key: string]: {
-      description?: string;
-      unit?: { symbol?: string };
-      observedProperty?: { label?: string };
+      description?: { fi?: string };
+      unit?: { 
+        label?: { fi?: string };
+        symbol?: { 
+          type?: string; 
+          value?: string; 
+        } | string;
+      };
+      observedProperty?: { 
+        id?: string;
+        label?: { fi?: string };
+      };
     };
   };
   ranges: {
-    [key: string]: { values: number[] };
+    [key: string]: { 
+      values: number[];
+    };
   };
 }
 
+console.log('App.tsx module loaded');
+
 function App() {
+  console.log('App() function called - rendering component');
   const [weatherData, setWeatherData] = useState<CoverageJSONResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  console.log('App state:', { hasWeatherData: !!weatherData, loading, error });
 
   const fetchExampleWeatherData = async () => {
     setLoading(true);
@@ -62,19 +78,31 @@ function App() {
         {
           f: 'CoverageJSON',
           'parameter-name': 'Temperature,WindSpeedMS,TotalCloudCover',
-          datetime: '2025-11-28T12:00:00Z',
+          datetime: '2025-11-28T12:00:00Z/2025-11-28T15:00:00Z',
         }
       ) as CoverageJSONResponse;
+      
+      // Log the actual data structure to understand the format
+      console.log('Weather data received:', data);
+      if (data.ranges) {
+        console.log('Sample range value:', Object.keys(data.ranges)[0], data.ranges[Object.keys(data.ranges)[0]]);
+      }
+      
       setWeatherData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+      console.error('Error fetching weather data:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchExampleWeatherData();
+    // Fetch weather data after a short delay to ensure page renders first
+    const timer = setTimeout(() => {
+      fetchExampleWeatherData();
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -277,7 +305,7 @@ function App() {
                 Example API Query
               </Typography>
               <Typography variant="body2" paragraph>
-                Here's an example of how to get weather data for Oslo, Norway (Friday, Nov 28, 2025):
+                Here's an example of how to get a 3-hour weather forecast for Oslo, Norway:
               </Typography>
               <Box
                 sx={{
@@ -293,7 +321,7 @@ function App() {
                 https://opendata.fmi.fi/edr/collections/pal_skandinavia/position?<br />
                 f=CoverageJSON&<br />
                 parameter-name=Temperature,WindSpeedMS,TotalCloudCover&<br />
-                datetime=2025-11-28T12:00:00Z&<br />
+                datetime=2025-11-28T12:00:00Z/2025-11-28T15:00:00Z&<br />
                 coords=POINT(10.752 59.913)
               </Box>
 
@@ -301,7 +329,7 @@ function App() {
                 Example Response
               </Typography>
               <Typography variant="body2" paragraph>
-                Live data from the API for Oslo, Norway on Friday, Nov 28, 2025 at 12:00 UTC:
+                Live data from the API showing 3-hour forecast for Oslo, Norway:
               </Typography>
 
               {loading && (
@@ -323,24 +351,62 @@ function App() {
                     <Table size="small">
                       <TableHead>
                         <TableRow sx={{ bgcolor: 'primary.main' }}>
+                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Time (UTC)</TableCell>
                           <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Parameter</TableCell>
                           <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Value</TableCell>
                           <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Unit</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {Object.keys(weatherData.ranges).map((paramKey) => {
-                          const value = weatherData.ranges[paramKey].values[0];
-                          const unit = weatherData.parameters[paramKey]?.unit?.symbol || '';
-                          const displayValue = typeof value === 'number' ? value.toFixed(1) : (value ?? 'N/A');
-                          return (
-                            <TableRow key={paramKey} hover>
-                              <TableCell>{paramKey}</TableCell>
-                              <TableCell>{displayValue}</TableCell>
-                              <TableCell>{unit}</TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {(() => {
+                          const timeValues = weatherData.domain.axes.t.values;
+                          const parameterKeys = Object.keys(weatherData.ranges);
+                          const rows: React.ReactElement[] = [];
+                          
+                          // Iterate through each time step
+                          timeValues.forEach((time, timeIndex) => {
+                            // For each time, show all parameters
+                            parameterKeys.forEach((paramKey) => {
+                              const param = weatherData.parameters[paramKey];
+                              const rangeValue = weatherData.ranges[paramKey].values[timeIndex];
+                              
+                              // Extract unit symbol
+                              let unit = '';
+                              if (param?.unit?.symbol) {
+                                const symbol = param.unit.symbol;
+                                if (typeof symbol === 'string') {
+                                  unit = symbol;
+                                } else if (typeof symbol === 'object' && symbol.value) {
+                                  unit = symbol.value;
+                                }
+                              }
+                              
+                              // Format the value
+                              const displayValue = typeof rangeValue === 'number' 
+                                ? rangeValue.toFixed(1) 
+                                : String(rangeValue ?? 'N/A');
+                              
+                              // Format parameter name
+                              const displayParamName = paramKey
+                                .replace(/([A-Z])/g, ' $1')
+                                .trim()
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                .join(' ');
+                              
+                              rows.push(
+                                <TableRow key={`${time}-${paramKey}`} hover>
+                                  <TableCell>{new Date(time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</TableCell>
+                                  <TableCell>{displayParamName}</TableCell>
+                                  <TableCell>{displayValue}</TableCell>
+                                  <TableCell>{unit}</TableCell>
+                                </TableRow>
+                              );
+                            });
+                          });
+                          
+                          return rows;
+                        })()}
                       </TableBody>
                     </Table>
                   </TableContainer>
