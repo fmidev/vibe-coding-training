@@ -83,6 +83,53 @@ const RainForecastGIF: React.FC = () => {
     return 'rgba(255, 0, 0, 0.9)';
   };
 
+  const generateDemoData = useCallback(() => {
+    // Generate demo data when API is unavailable
+    const lonStep = (BBOX.maxLon - BBOX.minLon) / GRID_RESOLUTION;
+    const latStep = (BBOX.maxLat - BBOX.minLat) / GRID_RESOLUTION;
+    
+    const gridPoints: { lon: number; lat: number }[] = [];
+    for (let i = 0; i <= GRID_RESOLUTION; i++) {
+      for (let j = 0; j <= GRID_RESOLUTION; j++) {
+        gridPoints.push({
+          lon: BBOX.minLon + i * lonStep,
+          lat: BBOX.minLat + j * latStep,
+        });
+      }
+    }
+
+    // Generate 12 time steps (3 hours of data, every 15 minutes)
+    const steps: TimeStep[] = [];
+    const now = new Date();
+    
+    for (let t = 0; t < 12; t++) {
+      const time = new Date(now.getTime() + t * 15 * 60 * 1000).toISOString();
+      
+      const gridData = gridPoints.map((point) => {
+        // Create a moving precipitation pattern
+        const phase = (t / 12) * Math.PI * 2;
+        const lonWave = Math.sin((point.lon - BBOX.minLon) * 2 + phase) * 0.5 + 0.5;
+        const latWave = Math.sin((point.lat - BBOX.minLat) * 3 + phase * 1.5) * 0.5 + 0.5;
+        
+        // Combine waves to create precipitation pattern
+        const intensity = lonWave * latWave * 5;
+        const noise = Math.random() * 0.5;
+        const value = intensity + noise;
+        
+        return {
+          lon: point.lon,
+          lat: point.lat,
+          value: value > 0.5 ? value : null,
+        };
+      });
+
+      steps.push({ time, gridData });
+    }
+
+    setTimeSteps(steps);
+    setCurrentTimeIndex(0);
+  }, []);
+
   const fetchPrecipitationData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -150,12 +197,14 @@ const RainForecastGIF: React.FC = () => {
       setTimeSteps(steps);
       setCurrentTimeIndex(0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch precipitation data');
       console.error('Error fetching precipitation data:', err);
+      // Fall back to demo data
+      setError('Unable to fetch live data. Showing demo visualization.');
+      generateDemoData();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [generateDemoData]);
 
   useEffect(() => {
     fetchPrecipitationData();
@@ -291,12 +340,12 @@ const RainForecastGIF: React.FC = () => {
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="info" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        {!loading && !error && timeSteps.length > 0 && (
+        {!loading && timeSteps.length > 0 && (
           <>
             <Box sx={{ position: 'relative', mb: 2 }}>
               <canvas
@@ -392,9 +441,19 @@ const RainForecastGIF: React.FC = () => {
             </Box>
 
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Data source: FMI Open Data (pal_skandinavia collection)
-              <br />
-              Precipitation intensity shown in mm/h
+              {error ? (
+                <>
+                  Data source: Demo visualization (simulated precipitation pattern)
+                  <br />
+                  Live data from FMI Open Data will be displayed when available
+                </>
+              ) : (
+                <>
+                  Data source: FMI Open Data (pal_skandinavia collection)
+                  <br />
+                  Precipitation intensity shown in mm/h
+                </>
+              )}
             </Typography>
           </>
         )}
