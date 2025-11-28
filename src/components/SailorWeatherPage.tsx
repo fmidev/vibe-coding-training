@@ -17,7 +17,7 @@ import {
   CardContent,
   Divider,
 } from '@mui/material';
-import { Refresh } from '@mui/icons-material';
+import { Refresh, ErrorOutline } from '@mui/icons-material';
 import {
   getAllStationObservations,
   type StationObservations,
@@ -143,9 +143,14 @@ const SailorWeatherPage: React.FC = () => {
                   }}
                 >
                   <TableCell component="th" scope="row">
-                    <Typography variant="body2" fontWeight="medium">
-                      {item.station.name}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" fontWeight="medium">
+                        {item.station.name}
+                      </Typography>
+                      {item.error && (
+                        <ErrorOutline fontSize="small" color="error" titleAccess="Data unavailable" />
+                      )}
+                    </Box>
                     {item.error && (
                       <Typography variant="caption" color="error">
                         {item.error}

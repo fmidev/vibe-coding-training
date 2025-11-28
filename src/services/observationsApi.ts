@@ -71,7 +71,7 @@ export const getStationObservations = async (
   datetime?: string
 ): Promise<ObservationData> => {
   // Use current hour if datetime not provided
-  const dt = datetime || new Date().toISOString().slice(0, 13) + ':00:00Z';
+  const dt = datetime || new Date().toISOString().split(':')[0] + ':00:00Z';
   
   const params = new URLSearchParams({
     datetime: dt,
@@ -128,7 +128,7 @@ export const getAllStationObservations = async (
         observations: {
           timestamp: datetime || new Date().toISOString(),
         },
-        error: result.reason?.message || 'Failed to fetch data',
+        error: result.reason instanceof Error ? result.reason.message : String(result.reason) || 'Failed to fetch data',
       };
     }
   });
