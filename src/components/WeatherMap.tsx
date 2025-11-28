@@ -5,7 +5,7 @@ import { ThermostatAuto, AcUnit } from '@mui/icons-material';
 import 'leaflet/dist/leaflet.css';
 import { getAreaData } from '../services/edrApi';
 import type { CoverageJSONData, WeatherDataPoint } from '../types/weather';
-import { getTemperatureColor, getPrecipitationColor } from '../utils/colorUtils';
+import { getTemperatureColor, getSnowfallColor } from '../utils/colorUtils';
 
 interface WeatherMapProps {
   width?: string;
@@ -89,7 +89,7 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
               const lon = xValues[xIdx];
               const color = type === 'temperature' 
                 ? getTemperatureColor(value)
-                : getPrecipitationColor(value);
+                : getSnowfallColor(value);
               
               points.push({ lat, lon, value, color });
             }
@@ -141,7 +141,7 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
           </ToggleButton>
           <ToggleButton value="snowfall" aria-label="snowfall">
             <AcUnit sx={{ mr: 1 }} />
-            Precipitation
+            Snowfall
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
@@ -204,7 +204,7 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
                 <strong>Data points:</strong> {weatherData.length}
               </Typography>
               <Typography variant="caption" display="block">
-                <strong>{dataType === 'temperature' ? 'Temperature Range' : 'Precipitation Range'}:</strong>{' '}
+                <strong>{dataType === 'temperature' ? 'Temperature Range' : 'Snowfall Range'}:</strong>{' '}
                 {Math.min(...weatherData.map(p => p.value)).toFixed(1)} - {Math.max(...weatherData.map(p => p.value)).toFixed(1)}{' '}
                 {dataType === 'temperature' ? '°C' : 'mm'}
               </Typography>
@@ -214,9 +214,9 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
       )}
       
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-        Real-time weather data from FMI Open Data (pal_skandinavia collection).
+        Forecasted weather data from FMI Open Data (pal_skandinavia collection).
         {dataType === 'temperature' && ' Colors: Blue = Cold, Red = Hot'}
-        {dataType === 'snowfall' && ' Colors: Light blue = Light precipitation, Dark blue = Heavy precipitation'}
+        {dataType === 'snowfall' && ' Colors: Light blue = Light snowfall, Dark blue = Heavy snowfall'}
       </Typography>
     </Paper>
   );
