@@ -107,10 +107,10 @@ const CityWeather = ({ city, coords }: CityWeatherProps) => {
           }
         ) as CoverageJSONResponse;
 
-        // Extract weather data
-        const temperature = data.ranges.Temperature?.values || [];
-        const windSpeed = data.ranges.WindSpeedMS?.values || [];
-        const cloudCover = data.ranges.TotalCloudCover?.values || [];
+        // Extract weather data (API returns lowercase parameter names)
+        const temperature = data.ranges.temperature?.values || [];
+        const windSpeed = data.ranges.windspeedms?.values || [];
+        const cloudCover = data.ranges.totalcloudcover?.values || [];
         const timestamps = data.domain.axes.t.values || [];
 
         setWeatherData({
