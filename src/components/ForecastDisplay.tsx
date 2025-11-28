@@ -55,16 +55,9 @@ const ForecastDisplay: React.FC<ForecastDisplayProps> = ({
           <Typography variant="h5" gutterBottom>
             7-Day Forecast
           </Typography>
-          {loading && (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-              <CircularProgress />
-            </Box>
-          )}
-          {!loading && (
-            <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-              Loading forecast data...
-            </Typography>
-          )}
+          <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+            No forecast data available
+          </Typography>
         </CardContent>
       </Card>
     );
