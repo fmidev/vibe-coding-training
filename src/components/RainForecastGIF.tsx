@@ -168,12 +168,16 @@ const RainForecastGIF: React.FC = () => {
       const yValues = data.domain.axes.y?.values || [];
       const precipValues = data.ranges.Precipitation1h.values;
       
-      // Determine grid dimensions
-      const numX = xValues.length || GRID_RESOLUTION;
-      const numY = yValues.length || GRID_RESOLUTION;
+      // Determine grid dimensions - use actual values or fall back to calculated grid
+      const numX = xValues.length > 0 ? xValues.length : GRID_RESOLUTION;
+      const numY = yValues.length > 0 ? yValues.length : GRID_RESOLUTION;
       const numT = timeValues.length;
       
-      console.log('Area data received:', { numX, numY, numT, dataPoints: precipValues.length });
+      // Validate that data dimensions match expectations
+      const expectedDataPoints = numX * numY * numT;
+      if (precipValues.length !== expectedDataPoints) {
+        console.warn(`Data dimension mismatch: expected ${expectedDataPoints}, got ${precipValues.length}`);
+      }
 
       // Process time steps from area data
       const steps: TimeStep[] = timeValues.map((time, timeIndex) => {
@@ -183,13 +187,15 @@ const RainForecastGIF: React.FC = () => {
         for (let yi = 0; yi < numY; yi++) {
           for (let xi = 0; xi < numX; xi++) {
             // Calculate index in the flat values array
-            // Format is typically [t, y, x] or [t, x, y]
+            // CoverageJSON typically uses [t, y, x] ordering for area data
             const dataIndex = timeIndex * (numX * numY) + yi * numX + xi;
-            const value = precipValues[dataIndex];
             
-            // Get coordinates
-            const lon = xValues[xi] || BBOX.minLon + (xi / numX) * (BBOX.maxLon - BBOX.minLon);
-            const lat = yValues[yi] || BBOX.minLat + (yi / numY) * (BBOX.maxLat - BBOX.minLat);
+            // Safely access value with bounds checking
+            const value = dataIndex < precipValues.length ? precipValues[dataIndex] : null;
+            
+            // Get coordinates - explicitly check for undefined to handle 0 values correctly
+            const lon = xValues[xi] !== undefined ? xValues[xi] : BBOX.minLon + (xi / numX) * (BBOX.maxLon - BBOX.minLon);
+            const lat = yValues[yi] !== undefined ? yValues[yi] : BBOX.minLat + (yi / numY) * (BBOX.maxLat - BBOX.minLat);
             
             gridData.push({
               lon,
@@ -204,7 +210,6 @@ const RainForecastGIF: React.FC = () => {
 
       setTimeSteps(steps);
       setCurrentTimeIndex(0);
-      console.log('Processed steps:', steps.length);
     } catch (err) {
       console.error('Error fetching precipitation data:', err);
       // Fall back to demo data
