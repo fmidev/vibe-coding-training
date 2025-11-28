@@ -49,7 +49,25 @@ const ForecastDisplay: React.FC<ForecastDisplayProps> = ({
   }
 
   if (!forecast || forecast.length === 0) {
-    return null;
+    return (
+      <Card elevation={3}>
+        <CardContent>
+          <Typography variant="h5" gutterBottom>
+            7-Day Forecast
+          </Typography>
+          {loading && (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+              <CircularProgress />
+            </Box>
+          )}
+          {!loading && (
+            <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+              Loading forecast data...
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   const getDayName = (dateString: string): string => {

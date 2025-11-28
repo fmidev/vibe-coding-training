@@ -27,6 +27,7 @@ function App() {
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [forecastLoading, setForecastLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forecastError, setForecastError] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [locationName, setLocationName] = useState('Helsinki');
 
@@ -48,11 +49,14 @@ function App() {
 
     // Load forecast
     setForecastLoading(true);
+    setForecastError(null);
     try {
       const forecastData = await fetch7DayForecast(latitude, longitude);
       setForecast(forecastData);
+      setForecastError(null);
     } catch (err) {
       console.error('Failed to fetch forecast:', err);
+      setForecastError(err instanceof Error ? err.message : 'Failed to fetch forecast data');
       setForecast(null);
     } finally {
       setForecastLoading(false);
@@ -131,7 +135,7 @@ function App() {
           <ForecastDisplay
             forecast={forecast}
             loading={forecastLoading}
-            error={null}
+            error={forecastError}
           />
         </Stack>
       </Container>
