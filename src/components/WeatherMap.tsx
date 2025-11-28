@@ -58,12 +58,13 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
           'parameter-name': parameter,
           datetime: datetime,
         }
-      ) as { coverages?: unknown[] } | { domain?: unknown; ranges?: unknown };
+      );
       
       console.log('Received weather data:', response);
       
       // Check if response has coverages array (area query response format)
-      const coverages = response.coverages || [response];
+      const responseData = response as Record<string, unknown>;
+      const coverages = Array.isArray(responseData.coverages) ? responseData.coverages : [response];
       
       if (!Array.isArray(coverages) || coverages.length === 0) {
         throw new Error('No coverage data available');
@@ -75,16 +76,24 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
       const points: WeatherDataPoint[] = [];
       
       for (const coverage of coverages) {
-        if (coverage && coverage.domain && coverage.ranges) {
-          const xValues = coverage.domain.axes.x?.values || [];
-          const yValues = coverage.domain.axes.y?.values || [];
-          const paramKey = Object.keys(coverage.ranges)[0];
+        const cov = coverage as Record<string, unknown>;
+        const domain = cov.domain as Record<string, unknown> | undefined;
+        const ranges = cov.ranges as Record<string, unknown> | undefined;
+        
+        if (domain && ranges) {
+          const axes = domain.axes as Record<string, unknown> | undefined;
+          const xAxis = axes?.x as { values?: number[] } | undefined;
+          const yAxis = axes?.y as { values?: number[] } | undefined;
+          const xValues = xAxis?.values || [];
+          const yValues = yAxis?.values || [];
+          const paramKey = Object.keys(ranges)[0];
           
           if (!paramKey) {
             continue;
           }
           
-          const values = coverage.ranges[paramKey].values;
+          const paramData = ranges[paramKey] as { values?: number[] } | undefined;
+          const values = paramData?.values || [];
           
           // For each coverage, extract the point(s)
           let valueIndex = 0;
