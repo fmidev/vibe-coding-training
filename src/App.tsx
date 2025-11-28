@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
+import WeatherDisplay from './components/WeatherDisplay';
 
 interface CoverageJSONResponse {
   type: string;
@@ -115,6 +116,9 @@ function App() {
           </Typography>
         </Toolbar>
       </AppBar>
+
+      {/* Weather Display for Helsinki and Turku */}
+      <WeatherDisplay />
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Stack spacing={4}>
