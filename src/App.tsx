@@ -43,15 +43,12 @@ function App() {
     error 
   });
 
-  const fetchWeatherDataForLocation = async (locationKey: keyof typeof LOCATIONS) => {
+  const fetchWeatherDataForLocation = async (
+    locationKey: keyof typeof LOCATIONS,
+    startTime: string,
+    endTime: string
+  ) => {
     const location = LOCATIONS[locationKey];
-    
-    // Get current time and 7 hours ahead
-    const now = new Date();
-    const sevenHoursLater = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-    
-    const startTime = now.toISOString().split('.')[0] + 'Z';
-    const endTime = sevenHoursLater.toISOString().split('.')[0] + 'Z';
 
     const data = await getPositionData(
       'pal_skandinavia',
@@ -87,10 +84,17 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch data for both locations in parallel
+      // Get current time and 7 hours ahead - shared across both locations
+      const now = new Date();
+      const sevenHoursLater = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      
+      const startTime = now.toISOString().split('.')[0] + 'Z';
+      const endTime = sevenHoursLater.toISOString().split('.')[0] + 'Z';
+
+      // Fetch data for both locations in parallel with same time range
       const [helsinkiData, sodankylaData] = await Promise.all([
-        fetchWeatherDataForLocation('helsinki'),
-        fetchWeatherDataForLocation('sodankyla'),
+        fetchWeatherDataForLocation('helsinki', startTime, endTime),
+        fetchWeatherDataForLocation('sodankyla', startTime, endTime),
       ]);
       
       setWeatherDataHelsinki(helsinkiData);
@@ -131,6 +135,7 @@ function App() {
 
   useEffect(() => {
     fetchWeatherData();
+    // Only fetch once on mount, not on every fetchWeatherData reference change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
