@@ -8,8 +8,9 @@ import {
   Alert,
   Chip,
   Stack,
+  Divider,
 } from '@mui/material';
-import { AcUnit, WbSunny } from '@mui/icons-material';
+import { AcUnit, WbSunny, TrendingDown, TrendingUp, Remove } from '@mui/icons-material';
 import { getPositionData } from '../services/edrApi';
 
 interface WeatherData {
@@ -154,6 +155,89 @@ const ChristmasWeather: React.FC = () => {
     fetchWeatherData();
   }, [fetchWeatherData]);
 
+  const renderTransformationCard = (current: WeatherData, christmas: WeatherData) => {
+    const tempChange = christmas.temperature - current.temperature;
+    const cloudChange = christmas.cloudCover - current.cloudCover;
+    const windChange = christmas.windSpeed - current.windSpeed;
+    const precipChange = christmas.precipitation - current.precipitation;
+
+    const renderChange = (label: string, value: number, unit: string) => {
+      const isPositive = value > 0;
+      const isNegative = value < 0;
+      const icon = isNegative ? <TrendingDown color="primary" fontSize="small" /> : 
+                   isPositive ? <TrendingUp color="primary" fontSize="small" /> : 
+                   <Remove color="disabled" fontSize="small" />;
+      
+      return (
+        <Box display="flex" alignItems="center" justifyContent="space-between" py={1}>
+          <Typography variant="body2" color="text.secondary">
+            {label}
+          </Typography>
+          <Box display="flex" alignItems="center" gap={1}>
+            {icon}
+            <Typography 
+              variant="body1" 
+              fontWeight="medium"
+              color={isNegative ? 'primary' : isPositive ? 'error' : 'text.secondary'}
+            >
+              {value > 0 ? '+' : ''}{value.toFixed(1)} {unit}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    };
+
+    return (
+      <Card elevation={3} sx={{ height: '100%', bgcolor: '#f5f5f5' }}>
+        <CardContent>
+          <Stack spacing={2}>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography variant="h5" component="h3" color="text.primary">
+                Transformation Details
+              </Typography>
+              <Typography variant="h6" component="span">
+                🔄
+              </Typography>
+            </Box>
+            
+            <Typography variant="body2" color="text.secondary">
+              Changes applied to create Christmas weather:
+            </Typography>
+
+            <Divider />
+
+            {renderChange('Temperature', tempChange, '°C')}
+            {renderChange('Cloud Cover', cloudChange, '%')}
+            {renderChange('Wind Speed', windChange, 'm/s')}
+            {renderChange('Precipitation', precipChange, 'mm')}
+
+            <Divider sx={{ mt: 2 }} />
+
+            <Box mt={1}>
+              <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                Transformation Rules:
+              </Typography>
+              <Stack spacing={0.5}>
+                <Typography variant="caption" color="text.secondary">
+                  • Temperature: -{TEMPERATURE_REDUCTION}°C (min {MIN_CHRISTMAS_TEMPERATURE}°C)
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  • Cloud Cover: min {MIN_CLOUD_COVER}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  • Wind Speed: ×{WIND_SPEED_MULTIPLIER}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  • Precipitation: ×{PRECIPITATION_MULTIPLIER} (min {MIN_PRECIPITATION}mm)
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+    );
+  };
+
   const renderWeatherCard = (weather: WeatherData | null, title: string, isChristmas: boolean) => (
     <Card elevation={3} sx={{ height: '100%', bgcolor: isChristmas ? '#e3f2fd' : 'white' }}>
       <CardContent>
@@ -251,14 +335,20 @@ const ChristmasWeather: React.FC = () => {
       )}
 
       {!loading && currentWeather && christmasWeather && (
-        <Box display="flex" flexWrap="wrap" gap={3}>
-          <Box flex="1" minWidth="300px">
-            {renderWeatherCard(currentWeather, 'Current Weather', false)}
+        <>
+          <Box display="flex" flexWrap="wrap" gap={3} mb={3}>
+            <Box flex="1" minWidth="300px">
+              {renderWeatherCard(currentWeather, 'Current Weather', false)}
+            </Box>
+            <Box flex="1" minWidth="300px">
+              {renderWeatherCard(christmasWeather, 'Christmas Weather ❄️🎄', true)}
+            </Box>
           </Box>
-          <Box flex="1" minWidth="300px">
-            {renderWeatherCard(christmasWeather, 'Christmas Weather ❄️🎄', true)}
+          
+          <Box maxWidth="800px" mx="auto">
+            {renderTransformationCard(currentWeather, christmasWeather)}
           </Box>
-        </Box>
+        </>
       )}
     </Box>
   );
