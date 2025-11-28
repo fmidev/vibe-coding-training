@@ -42,15 +42,22 @@ const ActivityMap: React.FC = () => {
   const [hasError, setHasError] = useState(false);
 
   const loadDemoData = () => {
+    // Constants for demo data generation
+    const BASE_TEMPERATURE = 20;
+    const REFERENCE_LATITUDE = 60;
+    const TEMPERATURE_GRADIENT = 2;
+    
+    // Weather symbols for variety: sunny, partly cloudy, cloudy, light rain, light snow
+    const VARIED_WEATHER_SYMBOLS = [1, 2, 3, 31, 51, 2, 1, 3, 31, 2, 51, 1, 51, 41];
+    
     // Generate demo data for all cities with varied conditions
     const demoWeather: CityWeather[] = FINNISH_CITIES.map((city, index) => {
       // Vary temperature based on latitude (colder in the north)
-      const baseTempByLat = 20 - (city.lat - 60) * 2;
+      const baseTempByLat = BASE_TEMPERATURE - (city.lat - REFERENCE_LATITUDE) * TEMPERATURE_GRADIENT;
       const temperature = baseTempByLat + (Math.sin(index) * 5);
       
       // Vary weather symbols across cities
-      const weatherSymbols = [1, 2, 3, 31, 51, 2, 1, 3, 31, 2, 51, 1, 51, 41];
-      const weatherSymbol = weatherSymbols[index % weatherSymbols.length];
+      const weatherSymbol = VARIED_WEATHER_SYMBOLS[index % VARIED_WEATHER_SYMBOLS.length];
       
       const suggestion = getActivitySuggestion({
         weatherSymbol,
@@ -118,7 +125,7 @@ const ActivityMap: React.FC = () => {
       });
 
       const results = await Promise.all(promises);
-      const allFailed = results.every(r => r.error);
+      const allFailed = results.every(r => 'error' in r && r.error);
       
       if (allFailed) {
         setHasError(true);
@@ -171,7 +178,7 @@ const ActivityMap: React.FC = () => {
           <Marker
             key={city.name}
             position={[city.lat, city.lon]}
-            icon={city.emoji ? createEmojiIcon(city.emoji) : new Icon.Default()}
+            icon={city.emoji ? createEmojiIcon(city.emoji) : new Icon.Default}
           >
             <Popup>
               <Box sx={{ p: 1 }}>
