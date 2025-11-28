@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import App from './App.tsx';
 
+console.log('main.tsx loaded');
+
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -15,7 +17,17 @@ const theme = createTheme({
   },
 });
 
-createRoot(document.getElementById('root')!).render(
+console.log('Attempting to find root element...');
+const rootElement = document.getElementById('root');
+console.log('Root element:', rootElement);
+
+if (!rootElement) {
+  document.body.innerHTML = '<h1>ERROR: Root element not found!</h1>';
+  throw new Error('Root element not found');
+}
+
+console.log('Creating React root...');
+createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -23,3 +35,4 @@ createRoot(document.getElementById('root')!).render(
     </ThemeProvider>
   </StrictMode>
 );
+console.log('React app rendered');
