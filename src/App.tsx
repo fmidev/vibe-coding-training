@@ -13,10 +13,11 @@ import { CloudQueue } from '@mui/icons-material';
 import CurrentWeatherDisplay from './components/CurrentWeatherDisplay';
 import LocationSelector from './components/LocationSelector';
 import ForecastDisplay from './components/ForecastDisplay';
+import ObservationsChart from './components/ObservationsChart';
 import type { Location } from './types/weather';
 import { LOCATIONS } from './types/weather';
-import { fetchCurrentWeather, fetch7DayForecast } from './services/weatherService';
-import type { CurrentWeather, DailyForecast } from './services/weatherService';
+import { fetchCurrentWeather, fetch7DayForecast, fetch2DayObservations } from './services/weatherService';
+import type { CurrentWeather, DailyForecast, ObservationPoint } from './services/weatherService';
 import { getCurrentLocation } from './utils/weatherUtils';
 
 function App() {
@@ -24,10 +25,13 @@ function App() {
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(false);
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null);
   const [forecast, setForecast] = useState<DailyForecast[] | null>(null);
+  const [observations, setObservations] = useState<ObservationPoint[] | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [forecastLoading, setForecastLoading] = useState(false);
+  const [observationsLoading, setObservationsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [forecastError, setForecastError] = useState<string | null>(null);
+  const [observationsError, setObservationsError] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [locationName, setLocationName] = useState('Helsinki');
 
@@ -60,6 +64,21 @@ function App() {
       setForecast(null);
     } finally {
       setForecastLoading(false);
+    }
+
+    // Load 2-day observations
+    setObservationsLoading(true);
+    setObservationsError(null);
+    try {
+      const observationsData = await fetch2DayObservations(latitude, longitude);
+      setObservations(observationsData);
+      setObservationsError(null);
+    } catch (err) {
+      console.error('Failed to fetch observations:', err);
+      setObservationsError(err instanceof Error ? err.message : 'Failed to fetch observation data');
+      setObservations(null);
+    } finally {
+      setObservationsLoading(false);
     }
   };
 
@@ -130,6 +149,12 @@ function App() {
             loading={weatherLoading}
             error={error}
             locationName={locationName}
+          />
+
+          <ObservationsChart
+            observations={observations}
+            loading={observationsLoading}
+            error={observationsError}
           />
 
           <ForecastDisplay

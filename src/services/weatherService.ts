@@ -27,6 +27,12 @@ export interface DailyForecast {
   weatherSymbol: number;
 }
 
+export interface ObservationPoint {
+  timestamp: string;
+  temperature: number;
+  windSpeed?: number;
+}
+
 /**
  * Fetch current weather for a location
  */
@@ -151,4 +157,45 @@ export const fetch7DayForecast = async (
     });
   
   return forecasts;
+};
+
+/**
+ * Fetch 2-day historical observations for a location
+ */
+export const fetch2DayObservations = async (
+  latitude: number,
+  longitude: number
+): Promise<ObservationPoint[]> => {
+  const coords = formatCoordinates(latitude, longitude);
+  
+  // Get 2 days of historical data
+  const now = new Date();
+  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  
+  const datetime = `${twoDaysAgo.toISOString()}/${now.toISOString()}`;
+  
+  const data = await getPositionData('pal_skandinavia', coords, {
+    f: 'CoverageJSON',
+    'parameter-name': 'Temperature,WindSpeedMS',
+    datetime,
+  }) as CoverageJSONResponse;
+  
+  // Extract observations
+  const observations: ObservationPoint[] = [];
+  
+  data.domain.axes.t.values.forEach((timestamp, index) => {
+    // Note: FMI API returns parameter names in lowercase
+    const temp = data.ranges.temperature?.values[index];
+    const windSpeed = data.ranges.windspeedms?.values[index];
+    
+    if (temp !== undefined) {
+      observations.push({
+        timestamp,
+        temperature: temp,
+        windSpeed,
+      });
+    }
+  });
+  
+  return observations;
 };
