@@ -49,13 +49,13 @@ const MapView: FC<MapViewProps> = ({
               <Typography variant="h6" component="div" gutterBottom>
                 {locationName}
               </Typography>
-              {temperature !== undefined && (
+              {temperature !== undefined && temperature !== null && (
                 <Typography variant="body1" component="div">
                   <strong>Temperature:</strong> {temperature.toFixed(1)}{temperatureUnit}
                 </Typography>
               )}
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {latitude.toFixed(3)}°N, {longitude.toFixed(3)}°E
+                {Math.abs(latitude).toFixed(3)}°{latitude >= 0 ? 'N' : 'S'}, {Math.abs(longitude).toFixed(3)}°{longitude >= 0 ? 'E' : 'W'}
               </Typography>
             </Box>
           </Popup>
