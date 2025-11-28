@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
+import { getActivitySuggestion } from './utils/activitySuggestions';
 
 interface CoverageJSONResponse {
   type: string;
@@ -77,7 +78,7 @@ function App() {
         'POINT(10.752 59.913)',
         {
           f: 'CoverageJSON',
-          'parameter-name': 'Temperature,WindSpeedMS,TotalCloudCover',
+          'parameter-name': 'Temperature,WindSpeedMS,TotalCloudCover,WeatherSymbol3,Precipitation1h',
           datetime: '2025-11-28T12:00:00Z/2025-11-28T15:00:00Z',
         }
       ) as CoverageJSONResponse;
@@ -95,6 +96,51 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadDemoData = () => {
+    // Demo data to showcase the activity suggestions feature
+    const demoData: CoverageJSONResponse = {
+      type: 'Coverage',
+      domain: {
+        axes: {
+          t: {
+            values: [
+              '2025-11-28T12:00:00Z',
+              '2025-11-28T15:00:00Z',
+              '2025-11-28T18:00:00Z',
+              '2025-11-28T21:00:00Z',
+            ]
+          }
+        }
+      },
+      parameters: {
+        temperature: {
+          unit: { symbol: '°C' }
+        },
+        weathersymbol3: {
+          unit: { symbol: '' }
+        },
+        precipitation1h: {
+          unit: { symbol: 'mm' }
+        },
+        windspeedms: {
+          unit: { symbol: 'm/s' }
+        },
+        totalcloudcover: {
+          unit: { symbol: '%' }
+        }
+      },
+      ranges: {
+        temperature: { values: [8.5, -2.0, 18.0, 25.5] },
+        weathersymbol3: { values: [2, 51, 31, 1] }, // partly cloudy, snow, rain, sunny
+        precipitation1h: { values: [0, 2.5, 5.0, 0] },
+        windspeedms: { values: [5.2, 3.1, 6.8, 2.5] },
+        totalcloudcover: { values: [45, 85, 90, 20] }
+      }
+    };
+    setWeatherData(demoData);
+    setError(null);
   };
 
   useEffect(() => {
@@ -339,10 +385,20 @@ function App() {
               )}
 
               {error && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Unable to fetch live data from the API. This could be due to network restrictions or the API being temporarily unavailable.
-                  When the API is accessible, you'll see a table here with real-time weather parameters and their values.
-                </Alert>
+                <>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Unable to fetch live data from the API. This could be due to network restrictions or the API being temporarily unavailable.
+                    When the API is accessible, you'll see a table here with real-time weather parameters and their values.
+                  </Alert>
+                  <Button 
+                    variant="contained" 
+                    size="small" 
+                    onClick={loadDemoData}
+                    sx={{ mb: 2 }}
+                  >
+                    Load Demo Data with Activity Suggestions
+                  </Button>
+                </>
               )}
 
               {weatherData && !loading && (
@@ -410,6 +466,69 @@ function App() {
                       </TableBody>
                     </Table>
                   </TableContainer>
+                  
+                  {/* Activity Suggestions Section */}
+                  <Card sx={{ mb: 2, bgcolor: 'info.light' }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        🎯 Activity Suggestions Based on Weather
+                      </Typography>
+                      <Divider sx={{ my: 2 }} />
+                      <Stack spacing={2}>
+                        {(() => {
+                          const timeValues = weatherData.domain.axes.t.values;
+                          const activities: React.ReactElement[] = [];
+                          
+                          // Get temperature and weather symbol for each time
+                          timeValues.forEach((time, timeIndex) => {
+                            const temperature = weatherData.ranges.temperature?.values[timeIndex];
+                            const weatherSymbol = weatherData.ranges.weathersymbol3?.values[timeIndex];
+                            const precipitation = weatherData.ranges.precipitation1h?.values[timeIndex];
+                            
+                            if (temperature !== undefined && weatherSymbol !== undefined) {
+                              const suggestion = getActivitySuggestion({
+                                weatherSymbol,
+                                temperature,
+                                precipitation,
+                              });
+                              
+                              activities.push(
+                                <Box
+                                  key={time}
+                                  sx={{
+                                    p: 2,
+                                    bgcolor: 'background.paper',
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  <Stack direction="row" spacing={2} alignItems="center">
+                                    <Typography variant="h4">{suggestion.emoji}</Typography>
+                                    <Box>
+                                      <Typography variant="subtitle2" color="text.secondary">
+                                        {new Date(time).toLocaleTimeString('en-GB', { 
+                                          hour: '2-digit', 
+                                          minute: '2-digit' 
+                                        })} - {temperature.toFixed(1)}°C
+                                      </Typography>
+                                      <Typography variant="h6">{suggestion.activity}</Typography>
+                                      <Typography variant="body2" color="text.secondary">
+                                        {suggestion.description}
+                                      </Typography>
+                                    </Box>
+                                  </Stack>
+                                </Box>
+                              );
+                            }
+                          });
+                          
+                          return activities;
+                        })()}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                  
                   <Button 
                     variant="outlined" 
                     size="small" 
