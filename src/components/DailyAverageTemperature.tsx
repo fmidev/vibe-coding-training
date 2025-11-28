@@ -12,6 +12,7 @@ import {
   Paper,
 } from '@mui/material';
 import { getTodayDate, getAverageTemperature } from '../services/temperatureApi';
+import FinlandMap from './FinlandMap';
 
 interface LocationData {
   name: string;
@@ -164,6 +165,17 @@ const DailyAverageTemperature: FC = () => {
           <CardContent>
             <Typography variant="h5" gutterBottom>
               Lämpötilakartta - {selectedDate}
+            </Typography>
+            
+            {/* Finland Map Visualization */}
+            <FinlandMap 
+              locationData={locationData} 
+              getTemperatureColor={getTemperatureColor}
+            />
+
+            {/* City cards grid below the map */}
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              Kaupunkikohtaiset lämpötilat
             </Typography>
             <Box
               sx={{
