@@ -224,12 +224,59 @@ const HelsinkiWeather: FC = () => {
 
   return (
     <Box>
-      <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" textAlign="center">
+      <Typography 
+        variant="h3" 
+        component="h1" 
+        gutterBottom 
+        fontWeight="bold" 
+        textAlign="center"
+        sx={{
+          animation: 'fadeInDown 0.6s ease-out',
+          '@keyframes fadeInDown': {
+            '0%': {
+              opacity: 0,
+              transform: 'translateY(-20px)',
+            },
+            '100%': {
+              opacity: 1,
+              transform: 'translateY(0)',
+            },
+          },
+        }}
+      >
         {selectedCity} Weather
       </Typography>
       
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-        <FormControl sx={{ minWidth: 200 }}>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mb: 3,
+          animation: 'fadeIn 0.8s ease-out 0.2s both',
+          '@keyframes fadeIn': {
+            '0%': {
+              opacity: 0,
+            },
+            '100%': {
+              opacity: 1,
+            },
+          },
+        }}
+      >
+        <FormControl 
+          sx={{ 
+            minWidth: 200,
+            '& .MuiOutlinedInput-root': {
+              backdropFilter: 'blur(10px)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                transform: 'translateY(-2px)',
+              },
+            },
+          }}
+        >
           <InputLabel id="city-select-label">Select City</InputLabel>
           <Select
             labelId="city-select-label"
@@ -247,17 +294,63 @@ const HelsinkiWeather: FC = () => {
         </FormControl>
       </Box>
       
-      <Typography variant="subtitle1" color="text.secondary" textAlign="center" gutterBottom>
+      <Typography 
+        variant="subtitle1" 
+        color="text.secondary" 
+        textAlign="center" 
+        gutterBottom
+        sx={{
+          animation: 'fadeIn 0.8s ease-out 0.3s both',
+        }}
+      >
         Updated: {new Date(weatherData.timestamp).toLocaleString()}
       </Typography>
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
         {/* Temperature */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card elevation={4} sx={{ height: '100%', bgcolor: 'primary.light', color: 'white' }}>
+          <Card 
+            elevation={0}
+            sx={{ 
+              height: '100%', 
+              background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.8) 0%, rgba(66, 165, 245, 0.8) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              animation: 'slideInUp 0.6s ease-out 0.1s both',
+              '@keyframes slideInUp': {
+                '0%': {
+                  opacity: 0,
+                  transform: 'translateY(30px)',
+                },
+                '100%': {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
+              '&:hover': {
+                transform: 'translateY(-8px) scale(1.02)',
+                boxShadow: '0 12px 40px rgba(25, 118, 210, 0.4)',
+              },
+            }}
+          >
             <CardContent>
               <Stack alignItems="center" spacing={2}>
-                <Thermostat sx={{ fontSize: 80 }} />
+                <Thermostat 
+                  sx={{ 
+                    fontSize: 80,
+                    animation: 'pulse 2s ease-in-out infinite',
+                    '@keyframes pulse': {
+                      '0%, 100%': {
+                        transform: 'scale(1)',
+                      },
+                      '50%': {
+                        transform: 'scale(1.05)',
+                      },
+                    },
+                  }} 
+                />
                 <Typography variant="h6" component="div">
                   Temperature
                 </Typography>
@@ -271,10 +364,38 @@ const HelsinkiWeather: FC = () => {
 
         {/* Precipitation */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card elevation={4} sx={{ height: '100%', bgcolor: 'info.light', color: 'white' }}>
+          <Card 
+            elevation={0}
+            sx={{ 
+              height: '100%', 
+              background: 'linear-gradient(135deg, rgba(2, 136, 209, 0.8) 0%, rgba(3, 169, 244, 0.8) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              animation: 'slideInUp 0.6s ease-out 0.2s both',
+              '&:hover': {
+                transform: 'translateY(-8px) scale(1.02)',
+                boxShadow: '0 12px 40px rgba(2, 136, 209, 0.4)',
+              },
+            }}
+          >
             <CardContent>
               <Stack alignItems="center" spacing={2}>
-                <Opacity sx={{ fontSize: 80 }} />
+                <Opacity 
+                  sx={{ 
+                    fontSize: 80,
+                    animation: 'bounce 2s ease-in-out infinite',
+                    '@keyframes bounce': {
+                      '0%, 100%': {
+                        transform: 'translateY(0)',
+                      },
+                      '50%': {
+                        transform: 'translateY(-10px)',
+                      },
+                    },
+                  }} 
+                />
                 <Typography variant="h6" component="div">
                   Precipitation (1h)
                 </Typography>
@@ -288,12 +409,38 @@ const HelsinkiWeather: FC = () => {
 
         {/* Precipitation Form */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card elevation={4} sx={{ height: '100%', bgcolor: 'secondary.light', color: 'white' }}>
+          <Card 
+            elevation={0}
+            sx={{ 
+              height: '100%', 
+              background: 'linear-gradient(135deg, rgba(194, 24, 91, 0.8) 0%, rgba(233, 30, 99, 0.8) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              animation: 'slideInUp 0.6s ease-out 0.3s both',
+              '&:hover': {
+                transform: 'translateY(-8px) scale(1.02)',
+                boxShadow: '0 12px 40px rgba(194, 24, 91, 0.4)',
+              },
+            }}
+          >
             <CardContent>
               <Stack alignItems="center" spacing={2}>
                 {(() => {
                   const IconComponent = getPrecipitationFormIcon(weatherData.precipitationForm);
-                  return <IconComponent sx={{ fontSize: 80 }} />;
+                  return <IconComponent sx={{ 
+                    fontSize: 80,
+                    animation: 'rotate 3s ease-in-out infinite',
+                    '@keyframes rotate': {
+                      '0%, 100%': {
+                        transform: 'rotate(0deg)',
+                      },
+                      '50%': {
+                        transform: 'rotate(10deg)',
+                      },
+                    },
+                  }} />;
                 })()}
                 <Typography variant="h6" component="div">
                   Precipitation Form
@@ -308,10 +455,36 @@ const HelsinkiWeather: FC = () => {
 
         {/* Weather Symbol */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card elevation={4} sx={{ height: '100%', bgcolor: 'warning.light', color: 'white' }}>
+          <Card 
+            elevation={0}
+            sx={{ 
+              height: '100%', 
+              background: 'linear-gradient(135deg, rgba(237, 108, 2, 0.8) 0%, rgba(255, 152, 0, 0.8) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              animation: 'slideInUp 0.6s ease-out 0.4s both',
+              '&:hover': {
+                transform: 'translateY(-8px) scale(1.02)',
+                boxShadow: '0 12px 40px rgba(237, 108, 2, 0.4)',
+              },
+            }}
+          >
             <CardContent>
               <Stack alignItems="center" spacing={2}>
-                <WbCloudy sx={{ fontSize: 80 }} />
+                <WbCloudy sx={{ 
+                  fontSize: 80,
+                  animation: 'float 3s ease-in-out infinite',
+                  '@keyframes float': {
+                    '0%, 100%': {
+                      transform: 'translateY(0px)',
+                    },
+                    '50%': {
+                      transform: 'translateY(-15px)',
+                    },
+                  },
+                }} />
                 <Typography variant="h6" component="div">
                   Weather Condition
                 </Typography>
