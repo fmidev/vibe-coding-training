@@ -181,6 +181,7 @@ function App() {
             color="inherit"
             startIcon={<Favorite />}
             onClick={handleDonationClick}
+            aria-label="Support the project with a donation"
             sx={{ 
               textTransform: 'none',
               '&:hover': {
@@ -310,6 +311,8 @@ function App() {
           severity="success" 
           sx={{ width: '100%' }}
           icon={<Favorite />}
+          role="status"
+          aria-live="polite"
         >
           Thank you for your support! ❤️
         </Alert>
