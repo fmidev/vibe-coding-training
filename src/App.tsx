@@ -27,37 +27,7 @@ import {
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
 import WeatherObservations from './components/WeatherObservations';
-
-interface CoverageJSONResponse {
-  type: string;
-  domain: {
-    axes: {
-      t: { values: string[] };
-      [key: string]: unknown;
-    };
-  };
-  parameters: {
-    [key: string]: {
-      description?: { fi?: string };
-      unit?: { 
-        label?: { fi?: string };
-        symbol?: { 
-          type?: string; 
-          value?: string; 
-        } | string;
-      };
-      observedProperty?: { 
-        id?: string;
-        label?: { fi?: string };
-      };
-    };
-  };
-  ranges: {
-    [key: string]: { 
-      values: number[];
-    };
-  };
-}
+import type { CoverageJSONResponse } from './types/weather';
 
 console.log('App.tsx module loaded');
 

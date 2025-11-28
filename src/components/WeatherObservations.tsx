@@ -15,37 +15,10 @@ import {
   Air,
 } from '@mui/icons-material';
 import { getPositionData } from '../services/edrApi';
+import type { CoverageJSONResponse } from '../types/weather';
 
-interface CoverageJSONResponse {
-  type: string;
-  domain: {
-    axes: {
-      t: { values: string[] };
-      [key: string]: unknown;
-    };
-  };
-  parameters: {
-    [key: string]: {
-      description?: { fi?: string };
-      unit?: {
-        label?: { fi?: string };
-        symbol?: {
-          type?: string;
-          value?: string;
-        } | string;
-      };
-      observedProperty?: {
-        id?: string;
-        label?: { fi?: string };
-      };
-    };
-  };
-  ranges: {
-    [key: string]: {
-      values: number[];
-    };
-  };
-}
+// Refresh interval in milliseconds (5 minutes)
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 interface WeatherData {
   temperature: number | null;
@@ -101,7 +74,7 @@ const WeatherObservations = () => {
   useEffect(() => {
     fetchHelsinkiWeather();
     // Refresh every 5 minutes
-    const interval = setInterval(fetchHelsinkiWeather, 5 * 60 * 1000);
+    const interval = setInterval(fetchHelsinkiWeather, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 
@@ -142,10 +115,21 @@ const WeatherObservations = () => {
   return (
     <Card elevation={3}>
       <CardContent>
-        <Typography variant="h5" component="h2" gutterBottom color="primary">
-          🌤️ Current Weather in Helsinki
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h5" component="h2" gutterBottom color="primary">
+            🌤️ Current Weather in Helsinki
+          </Typography>
+          {loading && weatherData && (
+            <CircularProgress size={20} />
+          )}
+        </Box>
         <Divider sx={{ my: 2 }} />
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         {weatherData && (
           <>
