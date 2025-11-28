@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   AppBar,
   Box,
@@ -14,18 +14,36 @@ import {
   List,
   ListItem,
   ListItemText,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
+import { CloudQueue, Code, GitHub, BugReport, LocationOn } from '@mui/icons-material';
+import { LineChart } from '@mui/x-charts/LineChart';
 import { getPositionData } from './services/edrApi';
+
+// 10 biggest cities in Finland with their coordinates
+interface City {
+  name: string;
+  coords: string; // Format: "POINT(lon lat)"
+  population: number;
+}
+
+const FINNISH_CITIES: City[] = [
+  { name: 'Helsinki', coords: 'POINT(24.9384 60.1699)', population: 656920 },
+  { name: 'Espoo', coords: 'POINT(24.6522 60.2055)', population: 292796 },
+  { name: 'Tampere', coords: 'POINT(23.7610 61.4978)', population: 244315 },
+  { name: 'Vantaa', coords: 'POINT(25.0378 60.2934)', population: 237434 },
+  { name: 'Oulu', coords: 'POINT(25.4714 65.0121)', population: 208939 },
+  { name: 'Turku', coords: 'POINT(22.2666 60.4518)', population: 194391 },
+  { name: 'Jyväskylä', coords: 'POINT(25.7209 62.2426)', population: 143420 },
+  { name: 'Lahti', coords: 'POINT(25.6612 60.9827)', population: 119984 },
+  { name: 'Kuopio', coords: 'POINT(27.6782 62.8924)', population: 120105 },
+  { name: 'Pori', coords: 'POINT(21.7974 61.4847)', population: 83809 },
+];
 
 interface CoverageJSONResponse {
   type: string;
@@ -65,20 +83,29 @@ function App() {
   const [weatherData, setWeatherData] = useState<CoverageJSONResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City>(FINNISH_CITIES[0]); // Default to Helsinki
 
-  console.log('App state:', { hasWeatherData: !!weatherData, loading, error });
+  console.log('App state:', { hasWeatherData: !!weatherData, loading, error, selectedCity: selectedCity.name });
 
-  const fetchExampleWeatherData = async () => {
+  const fetchExampleWeatherData = useCallback(async (city: City = selectedCity) => {
     setLoading(true);
     setError(null);
     try {
+      // Get current time and 24 hours from now
+      const now = new Date();
+      const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      
+      // Format dates to ISO string for API
+      const startTime = now.toISOString();
+      const endTime = twentyFourHoursLater.toISOString();
+      
       const data = await getPositionData(
         'pal_skandinavia',
-        'POINT(10.752 59.913)',
+        city.coords,
         {
           f: 'CoverageJSON',
-          'parameter-name': 'Temperature,WindSpeedMS,TotalCloudCover',
-          datetime: '2025-11-28T12:00:00Z/2025-11-28T15:00:00Z',
+          'parameter-name': 'Temperature',
+          datetime: `${startTime}/${endTime}`,
         }
       ) as CoverageJSONResponse;
       
@@ -90,20 +117,65 @@ function App() {
       
       setWeatherData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
       console.error('Error fetching weather data:', err);
+      
+      // Use mock data for demonstration when API is not accessible
+      const now = new Date();
+      const mockTimeValues: string[] = [];
+      const mockTempValues: number[] = [];
+      
+      // Generate 24 hours of mock data (hourly intervals)
+      for (let i = 0; i < 24; i++) {
+        const time = new Date(now.getTime() + i * 60 * 60 * 1000);
+        mockTimeValues.push(time.toISOString());
+        // Generate realistic temperature curve (sine wave between 0-15°C)
+        mockTempValues.push(7.5 + 7.5 * Math.sin((i / 24) * 2 * Math.PI - Math.PI / 2));
+      }
+      
+      const mockData: CoverageJSONResponse = {
+        type: 'Coverage',
+        domain: {
+          axes: {
+            t: { values: mockTimeValues }
+          }
+        },
+        parameters: {
+          Temperature: {
+            description: { fi: 'Lämpötila' },
+            unit: {
+              label: { fi: 'Celsius' },
+              symbol: '°C'
+            }
+          }
+        },
+        ranges: {
+          Temperature: {
+            values: mockTempValues
+          }
+        }
+      };
+      
+      setWeatherData(mockData);
+      setError('Using mock data for demonstration - API not accessible');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCity]);
 
   useEffect(() => {
     // Fetch weather data after a short delay to ensure page renders first
     const timer = setTimeout(() => {
-      fetchExampleWeatherData();
+      fetchExampleWeatherData(selectedCity);
     }, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [selectedCity, fetchExampleWeatherData]); // Re-fetch when city changes
+
+  const handleCityChange = (event: { target: { value: string } }) => {
+    const city = FINNISH_CITIES.find(c => c.name === event.target.value);
+    if (city) {
+      setSelectedCity(city);
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -305,7 +377,7 @@ function App() {
                 Example API Query
               </Typography>
               <Typography variant="body2" paragraph>
-                Here's an example of how to get a 3-hour weather forecast for Oslo, Norway:
+                Here's an example of how to get a 24-hour temperature forecast for {selectedCity.name}, Finland:
               </Typography>
               <Box
                 sx={{
@@ -320,16 +392,41 @@ function App() {
               >
                 https://opendata.fmi.fi/edr/collections/pal_skandinavia/position?<br />
                 f=CoverageJSON&<br />
-                parameter-name=Temperature,WindSpeedMS,TotalCloudCover&<br />
-                datetime=2025-11-28T12:00:00Z/2025-11-28T15:00:00Z&<br />
-                coords=POINT(10.752 59.913)
+                parameter-name=Temperature&<br />
+                datetime=[current_time]/[current_time+24h]&<br />
+                coords={selectedCity.coords}
               </Box>
 
               <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-                Example Response
+                Temperature Chart - 24 Hour Forecast
               </Typography>
+              
+              {/* Location Selection */}
+              <Box sx={{ mb: 3 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="city-select-label">
+                    <LocationOn sx={{ mr: 1, verticalAlign: 'middle', fontSize: 20 }} />
+                    Select City
+                  </InputLabel>
+                  <Select
+                    labelId="city-select-label"
+                    id="city-select"
+                    value={selectedCity.name}
+                    label="Select City"
+                    onChange={handleCityChange}
+                    disabled={loading}
+                  >
+                    {FINNISH_CITIES.map((city) => (
+                      <MenuItem key={city.name} value={city.name}>
+                        {city.name} ({city.population.toLocaleString()} residents)
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              
               <Typography variant="body2" paragraph>
-                Live data from the API showing 3-hour forecast for Oslo, Norway:
+                Live 24-hour temperature forecast data from the API for {selectedCity.name}, Finland:
               </Typography>
 
               {loading && (
@@ -338,88 +435,74 @@ function App() {
                 </Box>
               )}
 
-              {error && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Unable to fetch live data from the API. This could be due to network restrictions or the API being temporarily unavailable.
-                  When the API is accessible, you'll see a table here with real-time weather parameters and their values.
+              {error && weatherData && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  {error}
                 </Alert>
               )}
 
-              {weatherData && !loading && (
-                <>
-                  <TableContainer component={Paper} sx={{ mb: 2 }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow sx={{ bgcolor: 'primary.main' }}>
-                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Time (UTC)</TableCell>
-                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Parameter</TableCell>
-                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Value</TableCell>
-                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Unit</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {(() => {
-                          const timeValues = weatherData.domain.axes.t.values;
-                          const parameterKeys = Object.keys(weatherData.ranges);
-                          const rows: React.ReactElement[] = [];
-                          
-                          // Iterate through each time step
-                          timeValues.forEach((time, timeIndex) => {
-                            // For each time, show all parameters
-                            parameterKeys.forEach((paramKey) => {
-                              const param = weatherData.parameters[paramKey];
-                              const rangeValue = weatherData.ranges[paramKey].values[timeIndex];
-                              
-                              // Extract unit symbol
-                              let unit = '';
-                              if (param?.unit?.symbol) {
-                                const symbol = param.unit.symbol;
-                                if (typeof symbol === 'string') {
-                                  unit = symbol;
-                                } else if (typeof symbol === 'object' && symbol.value) {
-                                  unit = symbol.value;
-                                }
-                              }
-                              
-                              // Format the value
-                              const displayValue = typeof rangeValue === 'number' 
-                                ? rangeValue.toFixed(1) 
-                                : String(rangeValue ?? 'N/A');
-                              
-                              // Format parameter name
-                              const displayParamName = paramKey
-                                .replace(/([A-Z])/g, ' $1')
-                                .trim()
-                                .split(' ')
-                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                                .join(' ');
-                              
-                              rows.push(
-                                <TableRow key={`${time}-${paramKey}`} hover>
-                                  <TableCell>{new Date(time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</TableCell>
-                                  <TableCell>{displayParamName}</TableCell>
-                                  <TableCell>{displayValue}</TableCell>
-                                  <TableCell>{unit}</TableCell>
-                                </TableRow>
-                              );
-                            });
-                          });
-                          
-                          return rows;
-                        })()}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
-                    onClick={fetchExampleWeatherData}
-                    disabled={loading}
-                  >
-                    Refresh Data
-                  </Button>
-                </>
+              {error && !weatherData && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Unable to fetch live data from the API. This could be due to network restrictions or the API being temporarily unavailable.
+                  When the API is accessible, you'll see a chart here with real-time temperature data over 24 hours.
+                </Alert>
               )}
+
+              {weatherData && !loading && (() => {
+                // Find the temperature parameter key (case-insensitive)
+                const tempKey = Object.keys(weatherData.ranges).find(
+                  key => key.toLowerCase() === 'temperature'
+                ) || 'Temperature';
+                const temperatureData = weatherData.ranges[tempKey];
+                
+                if (!temperatureData || !temperatureData.values) {
+                  return (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      Unable to display chart: Temperature data is missing from the API response.
+                    </Alert>
+                  );
+                }
+                
+                return (
+                  <>
+                    <Box sx={{ width: '100%', height: 400, mb: 2 }}>
+                      <LineChart
+                        xAxis={[{
+                          data: weatherData.domain.axes.t.values.map(time => new Date(time)),
+                          scaleType: 'time',
+                          label: 'Time',
+                          valueFormatter: (date) => new Date(date).toLocaleTimeString('en-GB', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          }),
+                        }]}
+                        yAxis={[{
+                          label: 'Temperature (°C)',
+                        }]}
+                        series={[
+                          {
+                            data: temperatureData.values,
+                            label: 'Temperature',
+                            color: '#1976d2',
+                            curve: 'linear',
+                            showMark: false,
+                          },
+                        ]}
+                        margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                        grid={{ vertical: true, horizontal: true }}
+                      />
+                    </Box>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      onClick={() => fetchExampleWeatherData(selectedCity)}
+                      disabled={loading}
+                    >
+                      Refresh Data
+                    </Button>
+                  </>
+                );
+              })()}
 
               <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
                 Available Parameters
