@@ -7,6 +7,7 @@ A React application for demonstrating OGC EDR 1.1 API integration with FMI Open 
 - **React + Vite + TypeScript**: Modern React development with fast build times
 - **Material UI**: Professional UI components and design system
 - **OGC EDR 1.1 API Integration**: Access environmental data from FMI Open Data
+- **Real-time Weather Observations**: Display current weather conditions for Helsinki
 - **PAL Skandinavia Collection**: Default data collection from PAL-AROME model for Scandinavia
 
 ## FMI Open Data API
@@ -57,14 +58,38 @@ npm run dev
 ```
 vibe-coding-training/
 ├── src/
+│   ├── components/
+│   │   └── WeatherObservations.tsx  # Helsinki weather display component
 │   ├── services/
-│   │   └── edrApi.ts       # OGC EDR 1.1 API service
-│   ├── App.tsx             # Main application component
-│   └── main.tsx            # Application entry point
-├── public/                 # Static assets
-├── package.json            # Project dependencies
-└── vite.config.ts          # Vite configuration
+│   │   └── edrApi.ts                # OGC EDR 1.1 API service
+│   ├── types/
+│   │   └── weather.ts               # TypeScript type definitions
+│   ├── App.tsx                      # Main application component
+│   └── main.tsx                     # Application entry point
+├── public/                          # Static assets
+├── package.json                     # Project dependencies
+└── vite.config.ts                   # Vite configuration
 ```
+
+## Components
+
+### WeatherObservations
+
+Displays real-time weather observations for Helsinki from the FMI Open Data API.
+
+**Features:**
+- Shows current temperature (°C), humidity (%), and wind speed (m/s)
+- Auto-refreshes every 5 minutes
+- Displays observation timestamp
+- Handles loading and error states gracefully
+
+**Data Source:**
+- Collection: `opendata` (FMI observation data)
+- Location: Helsinki (60.17°N, 24.94°E)
+- Parameters:
+  - `ta_pt1m_avg` - Temperature (1-minute average)
+  - `rh_pt1m_avg` - Relative Humidity (1-minute average)
+  - `ws_pt10m_avg` - Wind Speed (10-minute average)
 
 ## API Service
 
