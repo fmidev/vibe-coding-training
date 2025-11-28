@@ -4,7 +4,7 @@ import { Box, Paper, ToggleButton, ToggleButtonGroup, Typography, CircularProgre
 import { ThermostatAuto, AcUnit } from '@mui/icons-material';
 import 'leaflet/dist/leaflet.css';
 import { getAreaData } from '../services/edrApi';
-import type { CoverageJSONData, WeatherDataPoint } from '../types/weather';
+import type { WeatherDataPoint } from '../types/weather';
 import { getTemperatureColor, getSnowfallColor } from '../utils/colorUtils';
 
 interface WeatherMapProps {
@@ -50,7 +50,7 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
       
       console.log('Fetching weather data:', { type, parameter, polygon, datetime });
       
-      const data = await getAreaData(
+      const response = await getAreaData(
         'pal_skandinavia',
         polygon,
         {
@@ -58,50 +58,60 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ width = '100%', height = '600px
           'parameter-name': parameter,
           datetime: datetime,
         }
-      ) as CoverageJSONData;
+      ) as { coverages?: unknown[] } | { domain?: unknown; ranges?: unknown };
       
-      console.log('Received weather data:', data);
+      console.log('Received weather data:', response);
       
-      // Parse the CoverageJSON data
-      if (data && data.domain && data.ranges) {
-        const points: WeatherDataPoint[] = [];
-        const xValues = data.domain.axes.x?.values || [];
-        const yValues = data.domain.axes.y?.values || [];
-        const paramKey = Object.keys(data.ranges)[0];
-        
-        if (!paramKey) {
-          throw new Error('No data available for the selected parameter');
-        }
-        
-        const values = data.ranges[paramKey].values;
-        const shape = data.ranges[paramKey].shape || [];
-        
-        console.log('Data shape:', shape, 'Values length:', values.length);
-        console.log('X values:', xValues.length, 'Y values:', yValues.length);
-        
-        // Parse grid data
-        let valueIndex = 0;
-        for (let yIdx = 0; yIdx < yValues.length; yIdx++) {
-          for (let xIdx = 0; xIdx < xValues.length; xIdx++) {
-            const value = values[valueIndex];
-            if (value !== null && value !== undefined && !isNaN(value)) {
-              const lat = yValues[yIdx];
-              const lon = xValues[xIdx];
-              const color = type === 'temperature' 
-                ? getTemperatureColor(value)
-                : getSnowfallColor(value);
-              
-              points.push({ lat, lon, value, color });
+      // Check if response has coverages array (area query response format)
+      const coverages = response.coverages || [response];
+      
+      if (!Array.isArray(coverages) || coverages.length === 0) {
+        throw new Error('No coverage data available');
+      }
+      
+      console.log('Processing', coverages.length, 'coverages');
+      
+      // Parse each coverage and aggregate data points
+      const points: WeatherDataPoint[] = [];
+      
+      for (const coverage of coverages) {
+        if (coverage && coverage.domain && coverage.ranges) {
+          const xValues = coverage.domain.axes.x?.values || [];
+          const yValues = coverage.domain.axes.y?.values || [];
+          const paramKey = Object.keys(coverage.ranges)[0];
+          
+          if (!paramKey) {
+            continue;
+          }
+          
+          const values = coverage.ranges[paramKey].values;
+          
+          // For each coverage, extract the point(s)
+          let valueIndex = 0;
+          for (let yIdx = 0; yIdx < yValues.length; yIdx++) {
+            for (let xIdx = 0; xIdx < xValues.length; xIdx++) {
+              const value = values[valueIndex];
+              if (value !== null && value !== undefined && !isNaN(value)) {
+                const lat = yValues[yIdx];
+                const lon = xValues[xIdx];
+                const color = type === 'temperature' 
+                  ? getTemperatureColor(value)
+                  : getSnowfallColor(value);
+                
+                points.push({ lat, lon, value, color });
+              }
+              valueIndex++;
             }
-            valueIndex++;
           }
         }
-        
-        console.log('Parsed weather points:', points.length);
-        setWeatherData(points);
-      } else {
-        throw new Error('Invalid data format received from API');
       }
+      
+      if (points.length === 0) {
+        throw new Error('No valid data points found in response');
+      }
+      
+      console.log('Parsed weather points:', points.length);
+      setWeatherData(points);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch weather data';
       setError(errorMessage);

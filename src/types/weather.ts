@@ -20,7 +20,7 @@ export interface CoverageJSONData {
       [key: string]: unknown;
     };
   };
-  parameters: {
+  parameters?: {
     [key: string]: {
       description?: { en?: string; fi?: string };
       unit?: {
@@ -45,6 +45,10 @@ export interface CoverageJSONData {
       values: number[];
     };
   };
+}
+
+export interface CoverageCollectionResponse {
+  coverages: CoverageJSONData[];
 }
 
 export interface WeatherDataPoint {
