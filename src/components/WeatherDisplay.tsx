@@ -97,6 +97,8 @@ const CityWeather = ({ city, coords }: CityWeatherProps) => {
         const startTime = now.toISOString();
         const endTime = sixHoursLater.toISOString();
 
+        // Request parameters using PascalCase/CamelCase names
+        // Note: API accepts PascalCase in request but returns lowercase in response
         const data = await getPositionData(
           'pal_skandinavia',
           coords,
@@ -107,7 +109,8 @@ const CityWeather = ({ city, coords }: CityWeatherProps) => {
           }
         ) as CoverageJSONResponse;
 
-        // Extract weather data (API returns lowercase parameter names)
+        // Extract weather data - API response uses lowercase parameter names:
+        // Temperature -> temperature, WindSpeedMS -> windspeedms, TotalCloudCover -> totalcloudcover
         const temperature = data.ranges.temperature?.values || [];
         const windSpeed = data.ranges.windspeedms?.values || [];
         const cloudCover = data.ranges.totalcloudcover?.values || [];
