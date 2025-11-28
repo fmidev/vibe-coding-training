@@ -180,7 +180,7 @@ function App() {
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Typography variant="body2" color="text.secondary" paragraph>
-                Activity suggestions for major cities across Finland based on current weather
+                Activity suggestions for major cities across Finland based on weather forecast
               </Typography>
               <ActivityMap />
             </CardContent>
