@@ -46,6 +46,23 @@ const FINLAND_LOCATIONS = [
   { name: 'Helsinki', coords: 'POINT(24.945 60.192)' },
 ];
 
+// Christmas weather transformation constants
+const TEMPERATURE_REDUCTION = 10;
+const MIN_CHRISTMAS_TEMPERATURE = -2;
+const MIN_CLOUD_COVER = 85;
+const WIND_SPEED_MULTIPLIER = 0.7;
+const PRECIPITATION_MULTIPLIER = 2;
+const MIN_PRECIPITATION = 5;
+
+// Default fallback values for weather data
+const DEFAULT_TEMPERATURE = 5;
+const DEFAULT_CLOUD_COVER = 50;
+const DEFAULT_WIND_SPEED = 5;
+const DEFAULT_PRECIPITATION = 0;
+
+// Time constants
+const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
+
 const ChristmasWeather: React.FC = () => {
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [christmasWeather, setChristmasWeather] = useState<WeatherData | null>(null);
@@ -57,13 +74,13 @@ const ChristmasWeather: React.FC = () => {
       ...weather,
       location: `${weather.location} (Christmas Edition)`,
       // Make it colder (ensure it's below 0°C for snow)
-      temperature: Math.min(weather.temperature - 10, -2),
+      temperature: Math.min(weather.temperature - TEMPERATURE_REDUCTION, MIN_CHRISTMAS_TEMPERATURE),
       // Add more clouds (90-100% for snow)
-      cloudCover: Math.max(weather.cloudCover, 85),
+      cloudCover: Math.max(weather.cloudCover, MIN_CLOUD_COVER),
       // Reduce wind slightly for peaceful Christmas feeling
-      windSpeed: weather.windSpeed * 0.7,
+      windSpeed: weather.windSpeed * WIND_SPEED_MULTIPLIER,
       // Add significant precipitation (snow!)
-      precipitation: Math.max(weather.precipitation * 2, 5),
+      precipitation: Math.max(weather.precipitation * PRECIPITATION_MULTIPLIER, MIN_PRECIPITATION),
     };
   };
 
@@ -76,7 +93,7 @@ const ChristmasWeather: React.FC = () => {
       
       // Get current time and next hour for forecast
       const now = new Date();
-      const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
+      const nextHour = new Date(now.getTime() + MILLISECONDS_PER_HOUR);
       
       const datetime = `${now.toISOString().split('.')[0]}Z/${nextHour.toISOString().split('.')[0]}Z`;
       
@@ -92,10 +109,10 @@ const ChristmasWeather: React.FC = () => {
 
       // Extract the first time step data
       const ranges = data.ranges;
-      const temperature = ranges.Temperature?.values[0] ?? 5;
-      const cloudCover = ranges.TotalCloudCover?.values[0] ?? 50;
-      const windSpeed = ranges.WindSpeedMS?.values[0] ?? 5;
-      const precipitation = ranges.Precipitation1h?.values[0] ?? 0;
+      const temperature = ranges.Temperature?.values[0] ?? DEFAULT_TEMPERATURE;
+      const cloudCover = ranges.TotalCloudCover?.values[0] ?? DEFAULT_CLOUD_COVER;
+      const windSpeed = ranges.WindSpeedMS?.values[0] ?? DEFAULT_WIND_SPEED;
+      const precipitation = ranges.Precipitation1h?.values[0] ?? DEFAULT_PRECIPITATION;
 
       const current: WeatherData = {
         location: location.name,
