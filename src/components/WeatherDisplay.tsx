@@ -324,22 +324,25 @@ const CityWeather = ({ city, coords }: CityWeatherProps) => {
   );
 };
 
-const WeatherDisplay = () => {
-  // Random Finnish cities with their coordinates
-  const randomCities = [
-    { name: 'Tampere', coords: 'POINT(23.76 61.50)' },
-    { name: 'Oulu', coords: 'POINT(25.47 65.01)' },
-    { name: 'Jyväskylä', coords: 'POINT(25.74 62.24)' },
-    { name: 'Lahti', coords: 'POINT(25.66 60.98)' },
-    { name: 'Kuopio', coords: 'POINT(27.68 62.89)' },
-    { name: 'Pori', coords: 'POINT(21.79 61.49)' },
-    { name: 'Joensuu', coords: 'POINT(29.76 62.60)' },
-    { name: 'Lappeenranta', coords: 'POINT(28.19 61.06)' },
-  ];
+// Random Finnish cities with their coordinates (defined outside component to avoid recreation)
+const RANDOM_CITIES = [
+  { name: 'Tampere', coords: 'POINT(23.76 61.50)' },
+  { name: 'Oulu', coords: 'POINT(25.47 65.01)' },
+  { name: 'Jyväskylä', coords: 'POINT(25.74 62.24)' },
+  { name: 'Lahti', coords: 'POINT(25.66 60.98)' },
+  { name: 'Kuopio', coords: 'POINT(27.68 62.89)' },
+  { name: 'Pori', coords: 'POINT(21.79 61.49)' },
+  { name: 'Joensuu', coords: 'POINT(29.76 62.60)' },
+  { name: 'Lappeenranta', coords: 'POINT(28.19 61.06)' },
+];
 
+const WeatherDisplay = () => {
   // Pick a random city (deterministic based on date so it changes daily)
-  const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const randomCity = randomCities[dayOfYear % randomCities.length];
+  // Calculated once on mount to avoid impure function calls during render
+  const [randomCity] = useState(() => {
+    const daysSinceEpoch = Math.floor(Date.now() / 86400000);
+    return RANDOM_CITIES[daysSinceEpoch % RANDOM_CITIES.length];
+  });
 
   return (
     <Box sx={{ py: 3, bgcolor: 'grey.100' }}>
