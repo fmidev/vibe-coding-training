@@ -80,6 +80,13 @@ export const getActivitySuggestion = (
         activity: 'Snowman',
         description: 'Great weather for building a snowman',
       };
+    } else {
+      // Snow when temperature is above 2°C - likely wet and slushy
+      return {
+        emoji: '🏠',
+        activity: 'Stay Cozy',
+        description: 'Slushy conditions - best to stay warm indoors',
+      };
     }
   }
 

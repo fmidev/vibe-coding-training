@@ -485,7 +485,8 @@ function App() {
                             const weatherSymbol = weatherData.ranges.weathersymbol3?.values[timeIndex];
                             const precipitation = weatherData.ranges.precipitation1h?.values[timeIndex];
                             
-                            if (temperature !== undefined && weatherSymbol !== undefined) {
+                            if (temperature !== undefined && weatherSymbol !== undefined && 
+                                !isNaN(temperature) && !isNaN(weatherSymbol)) {
                               const suggestion = getActivitySuggestion({
                                 weatherSymbol,
                                 temperature,
