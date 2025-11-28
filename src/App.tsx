@@ -26,37 +26,8 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
-
-interface CoverageJSONResponse {
-  type: string;
-  domain: {
-    axes: {
-      t: { values: string[] };
-      [key: string]: unknown;
-    };
-  };
-  parameters: {
-    [key: string]: {
-      description?: { fi?: string };
-      unit?: { 
-        label?: { fi?: string };
-        symbol?: { 
-          type?: string; 
-          value?: string; 
-        } | string;
-      };
-      observedProperty?: { 
-        id?: string;
-        label?: { fi?: string };
-      };
-    };
-  };
-  ranges: {
-    [key: string]: { 
-      values: number[];
-    };
-  };
-}
+import TemperatureChart from './components/TemperatureChart';
+import type { CoverageJSONResponse } from './types/weather';
 
 console.log('App.tsx module loaded');
 
@@ -118,6 +89,9 @@ function App() {
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Stack spacing={4}>
+          {/* Temperature Chart Section */}
+          <TemperatureChart />
+
           {/* Welcome Section */}
           <Box>
             <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
