@@ -48,11 +48,12 @@ export const fetchCurrentWeather = async (
   }) as CoverageJSONResponse;
   
   // Extract the first time step (current)
+  // Note: FMI API returns parameter names in lowercase
   const firstTimeIndex = 0;
-  const temperature = data.ranges.Temperature?.values[firstTimeIndex] ?? 0;
-  const windSpeed = data.ranges.WindSpeedMS?.values[firstTimeIndex];
-  const humidity = data.ranges.Humidity?.values[firstTimeIndex];
-  const cloudCover = data.ranges.TotalCloudCover?.values[firstTimeIndex];
+  const temperature = data.ranges.temperature?.values[firstTimeIndex] ?? 0;
+  const windSpeed = data.ranges.windspeedms?.values[firstTimeIndex];
+  const humidity = data.ranges.humidity?.values[firstTimeIndex];
+  const cloudCover = data.ranges.totalcloudcover?.values[firstTimeIndex];
   
   // Calculate weather symbol from cloud cover
   const weatherSymbol = cloudCover !== undefined 
@@ -100,8 +101,9 @@ export const fetch7DayForecast = async (
     const date = new Date(timestamp);
     const dateKey = date.toISOString().split('T')[0];
     
-    const temp = data.ranges.Temperature?.values[index];
-    const cloud = data.ranges.TotalCloudCover?.values[index];
+    // Note: FMI API returns parameter names in lowercase
+    const temp = data.ranges.temperature?.values[index];
+    const cloud = data.ranges.totalcloudcover?.values[index];
     
     if (temp !== undefined) {
       if (!dailyData.has(dateKey)) {
