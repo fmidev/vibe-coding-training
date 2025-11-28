@@ -19,6 +19,10 @@ L.Icon.Default.mergeOptions({
 
 // Create a custom temperature icon
 const createTemperatureIcon = (temperature: number, unit: string) => {
+  // Sanitize inputs to prevent XSS
+  const sanitizedTemp = Number(temperature).toFixed(1);
+  const sanitizedUnit = unit.replace(/[<>&"']/g, ''); // Remove potential HTML characters
+  
   return L.divIcon({
     className: 'custom-temperature-marker',
     html: `
@@ -34,7 +38,7 @@ const createTemperatureIcon = (temperature: number, unit: string) => {
         text-align: center;
         border: 2px solid white;
       ">
-        ${temperature.toFixed(1)}${unit}
+        ${sanitizedTemp}${sanitizedUnit}
       </div>
     `,
     iconSize: [70, 36],
