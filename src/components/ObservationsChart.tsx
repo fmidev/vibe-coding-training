@@ -73,10 +73,12 @@ const ObservationsChart: React.FC<ObservationsChartProps> = ({
   }
 
   // Format data for the chart
+  // Use a limited number of labels for better readability
   const chartData = observations.map((obs) => {
     const date = new Date(obs.timestamp);
     return {
       time: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' }),
+      fullTime: date.toLocaleString(),
       temperature: Number(obs.temperature.toFixed(1)),
       windSpeed: obs.windSpeed ? Number(obs.windSpeed.toFixed(1)) : null,
     };
@@ -104,7 +106,8 @@ const ObservationsChart: React.FC<ObservationsChartProps> = ({
                 angle={-45}
                 textAnchor="end"
                 height={80}
-                interval="preserveStartEnd"
+                interval="preserveStart"
+                tick={{ fontSize: 12 }}
               />
               <YAxis
                 yAxisId="left"
