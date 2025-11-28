@@ -285,7 +285,7 @@ const RainForecastGIF: React.FC = () => {
 
   useEffect(() => {
     if (isPlaying && timeSteps.length > 0) {
-      animationRef.current = setInterval(() => {
+      animationRef.current = window.setInterval(() => {
         setCurrentTimeIndex((prev) => {
           if (prev >= timeSteps.length - 1) {
             setIsPlaying(false);
@@ -293,14 +293,14 @@ const RainForecastGIF: React.FC = () => {
           }
           return prev + 1;
         });
-      }, 500) as unknown as number;
+      }, 500);
 
       return () => {
-        if (animationRef.current) {
+        if (animationRef.current !== null) {
           clearInterval(animationRef.current);
         }
       };
-    } else if (animationRef.current) {
+    } else if (animationRef.current !== null) {
       clearInterval(animationRef.current);
       animationRef.current = null;
     }
@@ -310,7 +310,7 @@ const RainForecastGIF: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
-  const handleSliderChange = (_event: Event, value: number | number[]) => {
+  const handleSliderChange = (_event: Event | React.SyntheticEvent, value: number | number[]) => {
     setCurrentTimeIndex(value as number);
     setIsPlaying(false);
   };
