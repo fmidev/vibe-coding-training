@@ -231,7 +231,7 @@ function App() {
                             }}
                           >
                             <Stack direction="row" spacing={2} alignItems="center">
-                              <Typography variant="h3">{suggestion.emoji}</Typography>
+                              <Typography variant="h4">{suggestion.emoji}</Typography>
                               <Box>
                                 <Typography variant="subtitle2" color="text.secondary">
                                   {new Date(time).toLocaleString('en-GB', { 
