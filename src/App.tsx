@@ -23,6 +23,10 @@ import {
   Paper,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
@@ -60,11 +64,26 @@ interface CoverageJSONResponse {
 
 console.log('App.tsx module loaded');
 
+// City data with coordinates
+const CITIES = [
+  { name: 'Kuopio', coords: 'POINT(27.6782 62.8924)' },
+  { name: 'Rovaniemi', coords: 'POINT(25.7294 66.5039)' },
+  { name: 'Jyväskylä', coords: 'POINT(25.7472 62.2415)' },
+  { name: 'Helsinki', coords: 'POINT(24.9384 60.1695)' },
+  { name: 'Tampere', coords: 'POINT(23.7871 61.4978)' },
+  { name: 'Turku', coords: 'POINT(22.2666 60.4518)' },
+  { name: 'Oulu', coords: 'POINT(25.4714 65.0121)' },
+];
+
 function App() {
   console.log('App() function called - rendering component');
   const [weatherData, setWeatherData] = useState<CoverageJSONResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('Helsinki');
+  const [cityTemperature, setCityTemperature] = useState<number | null>(null);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [cityError, setCityError] = useState<string | null>(null);
 
   console.log('App state:', { hasWeatherData: !!weatherData, loading, error });
 
@@ -97,6 +116,49 @@ function App() {
     }
   };
 
+  const fetchCityTemperature = async (cityName: string) => {
+    setCityLoading(true);
+    setCityError(null);
+    setCityTemperature(null);
+    
+    const city = CITIES.find(c => c.name === cityName);
+    if (!city) {
+      setCityError('City not found');
+      setCityLoading(false);
+      return;
+    }
+
+    try {
+      // Get current time and one hour ahead for a near real-time query
+      const now = new Date();
+      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+      const datetime = `${now.toISOString()}/${oneHourLater.toISOString()}`;
+
+      const data = await getPositionData(
+        'pal_skandinavia',
+        city.coords,
+        {
+          f: 'CoverageJSON',
+          'parameter-name': 'Temperature',
+          datetime,
+        }
+      ) as CoverageJSONResponse;
+
+      // Extract the first temperature value
+      if (data.ranges && data.ranges.Temperature && data.ranges.Temperature.values.length > 0) {
+        const temp = data.ranges.Temperature.values[0];
+        setCityTemperature(temp);
+      } else {
+        setCityError('Temperature data not available');
+      }
+    } catch (err) {
+      setCityError(err instanceof Error ? err.message : 'Failed to fetch temperature');
+      console.error('Error fetching city temperature:', err);
+    } finally {
+      setCityLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Fetch weather data after a short delay to ensure page renders first
     const timer = setTimeout(() => {
@@ -104,6 +166,11 @@ function App() {
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    // Fetch temperature for the selected city
+    fetchCityTemperature(selectedCity);
+  }, [selectedCity]);
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -127,6 +194,71 @@ function App() {
               Let's build an awesome weather application together using FMI Open Data!
             </Typography>
           </Box>
+
+          {/* City Temperature Selector Card */}
+          <Card elevation={3}>
+            <CardContent>
+              <Typography variant="h5" component="h2" gutterBottom color="primary">
+                🌡️ City Temperature
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              
+              <Typography variant="body1" paragraph>
+                Select a Finnish city to see its current temperature:
+              </Typography>
+
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel id="city-select-label">City</InputLabel>
+                <Select
+                  labelId="city-select-label"
+                  id="city-select"
+                  value={selectedCity}
+                  label="City"
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                >
+                  {CITIES.map((city) => (
+                    <MenuItem key={city.name} value={city.name}>
+                      {city.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {cityLoading && (
+                <Box display="flex" justifyContent="center" alignItems="center" p={3}>
+                  <CircularProgress size={40} />
+                  <Typography variant="body1" sx={{ ml: 2 }}>
+                    Loading temperature for {selectedCity}...
+                  </Typography>
+                </Box>
+              )}
+
+              {cityError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {cityError}
+                </Alert>
+              )}
+
+              {!cityLoading && !cityError && cityTemperature !== null && (
+                <Box 
+                  sx={{ 
+                    p: 3, 
+                    bgcolor: 'primary.main', 
+                    color: 'white', 
+                    borderRadius: 2,
+                    textAlign: 'center'
+                  }}
+                >
+                  <Typography variant="h6" gutterBottom>
+                    Current Temperature in {selectedCity}
+                  </Typography>
+                  <Typography variant="h2" component="div" fontWeight="bold">
+                    {cityTemperature.toFixed(1)}°C
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Getting Started Card */}
           <Card elevation={3}>
