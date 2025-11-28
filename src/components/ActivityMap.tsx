@@ -80,11 +80,15 @@ const ActivityMap: React.FC = () => {
   useEffect(() => {
     // Fetch forecast weather for all cities
     const fetchWeatherForCities = async () => {
+      // Constants for forecast time range
+      const FORECAST_HOURS = 3;
+      const MS_PER_HOUR = 60 * 60 * 1000;
+      
       const promises = FINNISH_CITIES.map(async (city) => {
         try {
           // Get forecast data for the next few hours
           const now = new Date();
-          const futureTime = new Date(now.getTime() + 3 * 60 * 60 * 1000); // 3 hours ahead
+          const futureTime = new Date(now.getTime() + FORECAST_HOURS * MS_PER_HOUR);
           const datetimeRange = `${now.toISOString()}/${futureTime.toISOString()}`;
           
           const data = await getPositionData(
@@ -102,7 +106,7 @@ const ActivityMap: React.FC = () => {
             };
           };
 
-          // Use the first forecast value (nearest future time)
+          // Use the first forecast value (API returns values in chronological order, so [0] is the nearest time)
           if (data.ranges?.temperature?.values?.[0] !== undefined && 
               data.ranges?.weathersymbol3?.values?.[0] !== undefined) {
             const temperature = data.ranges.temperature.values[0];
