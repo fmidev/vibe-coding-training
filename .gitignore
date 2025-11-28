@@ -27,3 +27,6 @@ dist-ssr
 .firebase/
 firebase-debug.log
 firebase-debug.*.log
+
+# Test files
+test-api.mjs
