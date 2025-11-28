@@ -59,7 +59,7 @@ const BBOX = {
 };
 
 // Grid resolution (number of points)
-const GRID_RESOLUTION = 20;
+const GRID_RESOLUTION = 80;
 
 const RainForecastGIF: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -263,7 +263,7 @@ const RainForecastGIF: React.FC = () => {
     ];
 
     ctx.fillStyle = '#333';
-    ctx.font = 'bold 12px Arial';
+    ctx.font = 'bold 18px Arial';
     cities.forEach(city => {
       if (city.lon >= BBOX.minLon && city.lon <= BBOX.maxLon &&
           city.lat >= BBOX.minLat && city.lat <= BBOX.maxLat) {
@@ -271,8 +271,8 @@ const RainForecastGIF: React.FC = () => {
         const y = height - ((city.lat - BBOX.minLat) / (BBOX.maxLat - BBOX.minLat)) * height;
         
         ctx.fillStyle = '#000';
-        ctx.fillText('•', x - 3, y + 3);
-        ctx.fillText(city.name, x + 5, y + 4);
+        ctx.fillText('•', x - 4, y + 4);
+        ctx.fillText(city.name, x + 8, y + 6);
       }
     });
   }, [timeSteps, currentTimeIndex]);
@@ -350,8 +350,8 @@ const RainForecastGIF: React.FC = () => {
             <Box sx={{ position: 'relative', mb: 2 }}>
               <canvas
                 ref={canvasRef}
-                width={800}
-                height={600}
+                width={1200}
+                height={900}
                 style={{
                   width: '100%',
                   height: 'auto',
