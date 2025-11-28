@@ -146,11 +146,19 @@ function App() {
       ) as CoverageJSONResponse;
 
       // Extract the most recent temperature value
-      // The API returns values in chronological order, so the last value is the most recent
+      // Using FMI 'opendata' collection which contains actual weather station observations
+      // The API returns values in chronological order, so the last valid value is the most recent
       if (data.ranges && data.ranges.ta_pt1m_avg && data.ranges.ta_pt1m_avg.values.length > 0) {
         const values = data.ranges.ta_pt1m_avg.values;
-        const temp = values[values.length - 1]; // Get the most recent value
-        setCityTemperature(temp);
+        // Filter out null/undefined values to handle sparse data
+        const validValues = values.filter((v): v is number => v !== null && v !== undefined);
+        
+        if (validValues.length > 0) {
+          const temp = validValues[validValues.length - 1]; // Get the most recent valid value
+          setCityTemperature(temp);
+        } else {
+          setCityError('Temperature data not available');
+        }
       } else {
         setCityError('Temperature data not available');
       }
