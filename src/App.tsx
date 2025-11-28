@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   AppBar,
   Box,
@@ -13,10 +14,69 @@ import {
   List,
   ListItem,
   ListItemText,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
+import { getPositionData } from './services/edrApi';
+
+interface CoverageJSONResponse {
+  type: string;
+  domain: {
+    axes: {
+      t: { values: string[] };
+      [key: string]: unknown;
+    };
+  };
+  parameters: {
+    [key: string]: {
+      description?: string;
+      unit?: { symbol?: string };
+      observedProperty?: { label?: string };
+    };
+  };
+  ranges: {
+    [key: string]: { values: number[] };
+  };
+}
 
 function App() {
+  const [weatherData, setWeatherData] = useState<CoverageJSONResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchExampleWeatherData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getPositionData(
+        'pal_skandinavia',
+        'POINT(10.752 59.913)',
+        {
+          f: 'CoverageJSON',
+          'parameter-name': 'Temperature,WindSpeedMS,TotalCloudCover',
+          datetime: '2025-11-28T12:00:00Z',
+        }
+      ) as CoverageJSONResponse;
+      setWeatherData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExampleWeatherData();
+  }, []);
+
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'grey.50', minHeight: '100vh' }}>
       <AppBar position="static">
@@ -241,52 +301,58 @@ function App() {
                 Example Response
               </Typography>
               <Typography variant="body2" paragraph>
-                The API returns data in CoverageJSON format. Here's a sample of what you might receive:
+                Live data from the API for Oslo, Norway on Friday, Nov 28, 2025 at 12:00 UTC:
               </Typography>
-              <Box
-                sx={{
-                  bgcolor: 'grey.900',
-                  color: 'grey.100',
-                  p: 2,
-                  borderRadius: 1,
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  overflowX: 'auto',
-                }}
-              >
-                {`{
-  "type": "Coverage",
-  "domain": {
-    "type": "Domain",
-    "axes": {
-      "x": { "values": [10.752] },
-      "y": { "values": [59.913] },
-      "t": { "values": ["2025-11-28T12:00:00Z"] }
-    }
-  },
-  "parameters": {
-    "Temperature": {
-      "type": "Parameter",
-      "description": "Air temperature",
-      "unit": { "symbol": "°C" },
-      "observedProperty": { "label": "Temperature" }
-    },
-    "WindSpeedMS": {
-      "type": "Parameter",
-      "unit": { "symbol": "m/s" }
-    },
-    "TotalCloudCover": {
-      "type": "Parameter",
-      "unit": { "symbol": "%" }
-    }
-  },
-  "ranges": {
-    "Temperature": { "values": [2.3] },
-    "WindSpeedMS": { "values": [4.5] },
-    "TotalCloudCover": { "values": [65] }
-  }
-}`}
-              </Box>
+
+              {loading && (
+                <Box display="flex" justifyContent="center" p={3}>
+                  <CircularProgress />
+                </Box>
+              )}
+
+              {error && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Unable to fetch live data from the API. This could be due to network restrictions or the API being temporarily unavailable.
+                  When the API is accessible, you'll see a table here with real-time weather parameters and their values.
+                </Alert>
+              )}
+
+              {weatherData && !loading && (
+                <>
+                  <TableContainer component={Paper} sx={{ mb: 2 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: 'primary.main' }}>
+                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Parameter</TableCell>
+                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Value</TableCell>
+                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Unit</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {Object.keys(weatherData.ranges).map((paramKey) => {
+                          const value = weatherData.ranges[paramKey].values[0];
+                          const unit = weatherData.parameters[paramKey]?.unit?.symbol || '';
+                          return (
+                            <TableRow key={paramKey} hover>
+                              <TableCell>{paramKey}</TableCell>
+                              <TableCell>{value !== null && value !== undefined ? value.toFixed(1) : 'N/A'}</TableCell>
+                              <TableCell>{unit}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  <Button 
+                    variant="outlined" 
+                    size="small" 
+                    onClick={fetchExampleWeatherData}
+                    disabled={loading}
+                  >
+                    Refresh Data
+                  </Button>
+                </>
+              )}
 
               <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
                 Available Parameters
