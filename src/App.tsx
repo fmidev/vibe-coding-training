@@ -118,10 +118,10 @@ function App() {
           {/* Title Section */}
           <Box>
             <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
-              Helsinki Weather
+              Helsinki Weather Forecast
             </Typography>
             <Typography variant="h6" color="text.secondary" paragraph>
-              Current conditions and 7-hour forecast
+              7-hour weather forecast from present time
             </Typography>
           </Box>
 
