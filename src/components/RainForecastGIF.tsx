@@ -61,16 +61,16 @@ interface TimeStep {
   gridData: GridPoint[];
 }
 
-// Southern Finland bounding box
+// Whole Finland bounding box
 const BBOX = {
-  minLon: 22,
-  maxLon: 26,
+  minLon: 19.5,
+  maxLon: 31.5,
   minLat: 59.5,
-  maxLat: 61.5,
+  maxLat: 70.0,
 };
 
-// Grid resolution (number of points)
-const GRID_RESOLUTION = 80;
+// Grid resolution (number of points) - super high resolution
+const GRID_RESOLUTION = 150;
 
 const RainForecastGIF: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -242,52 +242,66 @@ const RainForecastGIF: React.FC = () => {
     const toCanvasX = (lon: number) => ((lon - BBOX.minLon) / (BBOX.maxLon - BBOX.minLon)) * width;
     const toCanvasY = (lat: number) => height - ((lat - BBOX.minLat) / (BBOX.maxLat - BBOX.minLat)) * height;
 
-    // Draw more accurate Finland coastline for southern Finland region
-    // This includes the major coastline and some larger islands
+    // Draw detailed Finland coastline covering the whole country
     ctx.fillStyle = '#e8e8e8';
     ctx.strokeStyle = '#888';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.5;
 
-    // Main coastline of southern Finland (simplified but more accurate)
-    const mainCoastline = [
-      [22.0, 59.8], [22.2, 59.85], [22.4, 59.9], [22.6, 60.0], [22.8, 60.1],
-      [23.0, 60.15], [23.2, 60.2], [23.4, 60.25], [23.6, 60.3], [23.8, 60.35],
-      [24.0, 60.4], [24.2, 60.42], [24.4, 60.45], [24.6, 60.48], [24.8, 60.5],
-      [25.0, 60.5], [25.2, 60.48], [25.4, 60.45], [25.6, 60.4], [25.8, 60.35],
-      [26.0, 60.3], [26.0, 60.5], [26.0, 60.7], [26.0, 60.9], [26.0, 61.0],
-      [26.0, 61.2], [26.0, 61.4], [25.8, 61.45], [25.6, 61.48], [25.4, 61.5],
-      [25.2, 61.5], [25.0, 61.48], [24.8, 61.45], [24.6, 61.4], [24.4, 61.35],
-      [24.2, 61.3], [24.0, 61.25], [23.8, 61.2], [23.6, 61.15], [23.4, 61.1],
-      [23.2, 61.05], [23.0, 61.0], [22.8, 60.95], [22.6, 60.9], [22.4, 60.85],
-      [22.2, 60.8], [22.0, 60.7], [22.0, 60.5], [22.0, 60.3], [22.0, 60.1], [22.0, 59.8]
+    // Detailed outline of entire Finland (from south to north, then back)
+    const finlandCoastline = [
+      // Southern coast - Gulf of Finland
+      [21.0, 59.8], [21.5, 59.85], [22.0, 59.9], [22.5, 59.95], [23.0, 60.0],
+      [23.5, 60.05], [24.0, 60.15], [24.5, 60.2], [25.0, 60.2], [25.5, 60.15],
+      [26.0, 60.1], [26.5, 60.1], [27.0, 60.2], [27.5, 60.25], [28.0, 60.35],
+      [28.5, 60.4], [29.0, 60.45], [29.5, 60.5], [30.0, 60.4], [30.5, 60.3],
+      
+      // Eastern border (with Russia)
+      [30.5, 60.5], [30.5, 61.0], [30.5, 61.5], [30.5, 62.0], [30.5, 62.5],
+      [30.5, 63.0], [30.5, 63.5], [30.5, 64.0], [30.5, 64.5], [30.5, 65.0],
+      [30.5, 65.5], [30.5, 66.0], [30.5, 66.5], [30.5, 67.0], [30.5, 67.5],
+      [30.5, 68.0], [30.0, 68.5], [29.5, 68.8], [29.0, 69.0], [28.5, 69.2],
+      [28.0, 69.3], [27.5, 69.4], [27.0, 69.5], [26.5, 69.6], [26.0, 69.7],
+      [25.5, 69.8], [25.0, 69.9], [24.5, 70.0], [24.0, 70.0], [23.5, 70.0],
+      
+      // Northern coast (Lapland)
+      [23.0, 70.0], [22.5, 69.9], [22.0, 69.8], [21.5, 69.6], [21.0, 69.4],
+      [20.5, 69.2], [20.0, 69.0],
+      
+      // Western coast (Gulf of Bothnia)
+      [20.5, 68.5], [21.0, 68.0], [21.5, 67.5], [22.0, 67.0], [22.5, 66.5],
+      [23.0, 66.0], [23.5, 65.5], [24.0, 65.0], [24.5, 64.5], [25.0, 64.0],
+      [25.0, 63.5], [24.5, 63.0], [24.0, 62.5], [23.5, 62.0], [23.0, 61.5],
+      [22.5, 61.0], [22.0, 60.7], [21.5, 60.4], [21.0, 60.2], [20.5, 60.0],
+      [20.0, 60.0], [20.5, 59.9], [21.0, 59.8]
     ];
 
     ctx.beginPath();
-    ctx.moveTo(toCanvasX(mainCoastline[0][0]), toCanvasY(mainCoastline[0][1]));
-    mainCoastline.forEach(([lon, lat]) => {
+    ctx.moveTo(toCanvasX(finlandCoastline[0][0]), toCanvasY(finlandCoastline[0][1]));
+    finlandCoastline.forEach(([lon, lat]) => {
       ctx.lineTo(toCanvasX(lon), toCanvasY(lat));
     });
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Draw southern archipelago islands
-    const islands = [
-      // Larger islands in the archipelago
-      [[22.5, 60.0], [22.6, 60.0], [22.6, 60.05], [22.5, 60.05]],
-      [[22.8, 60.05], [22.9, 60.05], [22.9, 60.1], [22.8, 60.1]],
-      [[23.2, 60.1], [23.3, 60.1], [23.3, 60.15], [23.2, 60.15]],
-      [[23.5, 60.15], [23.6, 60.15], [23.6, 60.2], [23.5, 60.2]],
-      [[24.0, 60.2], [24.1, 60.2], [24.1, 60.25], [24.0, 60.25]],
-      [[24.5, 60.2], [24.6, 60.2], [24.6, 60.25], [24.5, 60.25]],
-      [[25.0, 60.15], [25.1, 60.15], [25.1, 60.2], [25.0, 60.2]],
-      [[25.5, 60.1], [25.6, 60.1], [25.6, 60.15], [25.5, 60.15]],
+    // Draw major lakes
+    ctx.fillStyle = '#b8d4e8';
+    const lakes = [
+      // Lake Saimaa area (Eastern Finland)
+      [[28.0, 61.0], [28.5, 61.0], [28.5, 61.8], [28.0, 61.8]],
+      [[27.5, 61.2], [28.0, 61.2], [28.0, 61.6], [27.5, 61.6]],
+      // Lake Päijänne (Central Finland)
+      [[25.5, 61.2], [25.8, 61.2], [25.8, 62.0], [25.5, 62.0]],
+      // Lake Oulujärvi (Northern Finland)
+      [[27.0, 64.2], [27.5, 64.2], [27.5, 64.5], [27.0, 64.5]],
+      // Lake Inari (Lapland)
+      [[27.5, 68.8], [28.5, 68.8], [28.5, 69.2], [27.5, 69.2]],
     ];
 
-    islands.forEach((island) => {
+    lakes.forEach((lake) => {
       ctx.beginPath();
-      ctx.moveTo(toCanvasX(island[0][0]), toCanvasY(island[0][1]));
-      island.forEach(([lon, lat]) => {
+      ctx.moveTo(toCanvasX(lake[0][0]), toCanvasY(lake[0][1]));
+      lake.forEach(([lon, lat]) => {
         ctx.lineTo(toCanvasX(lon), toCanvasY(lat));
       });
       ctx.closePath();
@@ -316,15 +330,30 @@ const RainForecastGIF: React.FC = () => {
       }
     });
 
-    // Draw more cities across Finland
+    // Draw cities across all of Finland
     const cities = [
+      // Southern Finland
       { name: 'Helsinki', lon: 24.94, lat: 60.17 },
       { name: 'Espoo', lon: 24.66, lat: 60.21 },
       { name: 'Turku', lon: 22.27, lat: 60.45 },
-      { name: 'Tampere', lon: 23.76, lat: 61.50 },
-      { name: 'Lahti', lon: 25.66, lat: 60.98 },
-      { name: 'Hämeenlinna', lon: 24.46, lat: 60.99 },
       { name: 'Porvoo', lon: 25.67, lat: 60.39 },
+      { name: 'Hämeenlinna', lon: 24.46, lat: 60.99 },
+      { name: 'Lahti', lon: 25.66, lat: 60.98 },
+      // Central Finland
+      { name: 'Tampere', lon: 23.76, lat: 61.50 },
+      { name: 'Jyväskylä', lon: 25.75, lat: 62.24 },
+      { name: 'Pori', lon: 21.78, lat: 61.48 },
+      { name: 'Vaasa', lon: 21.62, lat: 63.10 },
+      { name: 'Kuopio', lon: 27.69, lat: 62.89 },
+      { name: 'Joensuu', lon: 29.76, lat: 62.60 },
+      // Northern Finland
+      { name: 'Oulu', lon: 25.47, lat: 65.01 },
+      { name: 'Kajaani', lon: 27.73, lat: 64.22 },
+      { name: 'Rovaniemi', lon: 25.73, lat: 66.50 },
+      // Lapland
+      { name: 'Kemi', lon: 24.56, lat: 65.74 },
+      { name: 'Sodankylä', lon: 26.60, lat: 67.42 },
+      { name: 'Ivalo', lon: 27.55, lat: 68.66 },
     ];
 
     ctx.font = 'bold 16px Arial';
@@ -401,7 +430,7 @@ const RainForecastGIF: React.FC = () => {
     <Card elevation={3}>
       <CardContent>
         <Typography variant="h5" component="h2" gutterBottom color="primary">
-          🌧️ Sadetutka ja salamahavainnot - Southern Finland
+          🌧️ Sadetutka ja salamahavainnot - Finland
         </Typography>
         <Divider sx={{ my: 2 }} />
         
@@ -422,8 +451,8 @@ const RainForecastGIF: React.FC = () => {
             <Box sx={{ position: 'relative', mb: 2 }}>
               <canvas
                 ref={canvasRef}
-                width={1200}
-                height={900}
+                width={1600}
+                height={2000}
                 style={{
                   width: '100%',
                   height: 'auto',
