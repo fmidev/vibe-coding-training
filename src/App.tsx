@@ -27,6 +27,7 @@ import {
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
 import WeatherObservations from './components/WeatherObservations';
+import TemperatureForecast from './components/TemperatureForecast';
 import type { CoverageJSONResponse } from './types/weather';
 
 console.log('App.tsx module loaded');
@@ -91,6 +92,9 @@ function App() {
         <Stack spacing={4}>
           {/* Weather Observations Section */}
           <WeatherObservations />
+
+          {/* Temperature Forecast Section */}
+          <TemperatureForecast />
 
           {/* Welcome Section */}
           <Box>
