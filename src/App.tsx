@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   AppBar,
   Box,
@@ -16,10 +16,34 @@ import {
   ListItemText,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
+import { CloudQueue, Code, GitHub, BugReport, LocationOn } from '@mui/icons-material';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { getPositionData } from './services/edrApi';
+
+// 10 biggest cities in Finland with their coordinates
+interface City {
+  name: string;
+  coords: string; // Format: "POINT(lon lat)"
+  population: number;
+}
+
+const FINNISH_CITIES: City[] = [
+  { name: 'Helsinki', coords: 'POINT(24.9384 60.1699)', population: 656920 },
+  { name: 'Espoo', coords: 'POINT(24.6522 60.2055)', population: 292796 },
+  { name: 'Tampere', coords: 'POINT(23.7610 61.4978)', population: 244315 },
+  { name: 'Vantaa', coords: 'POINT(25.0378 60.2934)', population: 237434 },
+  { name: 'Oulu', coords: 'POINT(25.4714 65.0121)', population: 208939 },
+  { name: 'Turku', coords: 'POINT(22.2666 60.4518)', population: 194391 },
+  { name: 'Jyväskylä', coords: 'POINT(25.7209 62.2426)', population: 143420 },
+  { name: 'Lahti', coords: 'POINT(25.6612 60.9827)', population: 119984 },
+  { name: 'Kuopio', coords: 'POINT(27.6782 62.8924)', population: 120105 },
+  { name: 'Pori', coords: 'POINT(21.7974 61.4847)', population: 83809 },
+];
 
 interface CoverageJSONResponse {
   type: string;
@@ -59,10 +83,11 @@ function App() {
   const [weatherData, setWeatherData] = useState<CoverageJSONResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City>(FINNISH_CITIES[0]); // Default to Helsinki
 
-  console.log('App state:', { hasWeatherData: !!weatherData, loading, error });
+  console.log('App state:', { hasWeatherData: !!weatherData, loading, error, selectedCity: selectedCity.name });
 
-  const fetchExampleWeatherData = async () => {
+  const fetchExampleWeatherData = useCallback(async (city: City = selectedCity) => {
     setLoading(true);
     setError(null);
     try {
@@ -76,7 +101,7 @@ function App() {
       
       const data = await getPositionData(
         'pal_skandinavia',
-        'POINT(10.752 59.913)',
+        city.coords,
         {
           f: 'CoverageJSON',
           'parameter-name': 'Temperature',
@@ -135,15 +160,22 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCity]);
 
   useEffect(() => {
     // Fetch weather data after a short delay to ensure page renders first
     const timer = setTimeout(() => {
-      fetchExampleWeatherData();
+      fetchExampleWeatherData(selectedCity);
     }, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [selectedCity, fetchExampleWeatherData]); // Re-fetch when city changes
+
+  const handleCityChange = (event: { target: { value: string } }) => {
+    const city = FINNISH_CITIES.find(c => c.name === event.target.value);
+    if (city) {
+      setSelectedCity(city);
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -345,7 +377,7 @@ function App() {
                 Example API Query
               </Typography>
               <Typography variant="body2" paragraph>
-                Here's an example of how to get a 24-hour temperature forecast for Oslo, Norway:
+                Here's an example of how to get a 24-hour temperature forecast for {selectedCity.name}, Finland:
               </Typography>
               <Box
                 sx={{
@@ -362,14 +394,39 @@ function App() {
                 f=CoverageJSON&<br />
                 parameter-name=Temperature&<br />
                 datetime=[current_time]/[current_time+24h]&<br />
-                coords=POINT(10.752 59.913)
+                coords={selectedCity.coords}
               </Box>
 
               <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
                 Temperature Chart - 24 Hour Forecast
               </Typography>
+              
+              {/* Location Selection */}
+              <Box sx={{ mb: 3 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="city-select-label">
+                    <LocationOn sx={{ mr: 1, verticalAlign: 'middle', fontSize: 20 }} />
+                    Select City
+                  </InputLabel>
+                  <Select
+                    labelId="city-select-label"
+                    id="city-select"
+                    value={selectedCity.name}
+                    label="Select City"
+                    onChange={handleCityChange}
+                    disabled={loading}
+                  >
+                    {FINNISH_CITIES.map((city) => (
+                      <MenuItem key={city.name} value={city.name}>
+                        {city.name} ({city.population.toLocaleString()} residents)
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              
               <Typography variant="body2" paragraph>
-                Live 24-hour temperature forecast data from the API for Oslo, Norway:
+                Live 24-hour temperature forecast data from the API for {selectedCity.name}, Finland:
               </Typography>
 
               {loading && (
@@ -438,7 +495,7 @@ function App() {
                     <Button 
                       variant="outlined" 
                       size="small" 
-                      onClick={fetchExampleWeatherData}
+                      onClick={() => fetchExampleWeatherData(selectedCity)}
                       disabled={loading}
                     >
                       Refresh Data
