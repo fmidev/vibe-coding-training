@@ -14,6 +14,8 @@ import {
   Opacity,
   WbCloudy,
   AcUnit,
+  Grain,
+  WaterDrop,
 } from '@mui/icons-material';
 import { getPositionData } from '../services/edrApi';
 
@@ -62,6 +64,18 @@ const getPrecipitationFormText = (code: number): string => {
     6: 'Hail',
   };
   return forms[code] || `Code ${code}`;
+};
+
+// Helper function to get precipitation form icon
+const getPrecipitationFormIcon = (code: number) => {
+  // 0: No precipitation, 1: Rain, 2: Sleet, 3: Snow, 4: Freezing rain, 5: Freezing drizzle, 6: Hail
+  if (code === 0) return WbCloudy; // No precipitation - cloud
+  if (code === 1) return WaterDrop; // Rain - water drop
+  if (code === 2) return Grain; // Sleet - grain/mixed
+  if (code === 3) return AcUnit; // Snow - snowflake
+  if (code === 4 || code === 5) return WaterDrop; // Freezing rain/drizzle - water drop
+  if (code === 6) return Grain; // Hail - grain
+  return Opacity; // Default - opacity/water
 };
 
 // Helper function to get weather symbol description
@@ -230,7 +244,10 @@ const HelsinkiWeather: FC = () => {
           <Card elevation={4} sx={{ height: '100%', bgcolor: 'secondary.light', color: 'white' }}>
             <CardContent>
               <Stack alignItems="center" spacing={2}>
-                <AcUnit sx={{ fontSize: 80 }} />
+                {(() => {
+                  const IconComponent = getPrecipitationFormIcon(weatherData.precipitationForm);
+                  return <IconComponent sx={{ fontSize: 80 }} />;
+                })()}
                 <Typography variant="h6" component="div">
                   Precipitation Form
                 </Typography>
