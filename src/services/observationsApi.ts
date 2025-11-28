@@ -160,3 +160,103 @@ export const getAllStationObservations = async (
     }
   });
 };
+
+// Forecast API for pressure trends
+const FORECAST_COLLECTION = 'pal_skandinavia';
+
+export interface PressureForecastPoint {
+  time: string;
+  pressure: number;
+}
+
+export interface StationPressureForecast {
+  station: WeatherStation;
+  forecast: PressureForecastPoint[];
+  error?: string;
+}
+
+interface ForecastCoverageJSONResponse {
+  type: string;
+  domain: {
+    axes: {
+      t: { values: string[] };
+      x: { values: number[] };
+      y: { values: number[] };
+    };
+  };
+  parameters: Record<string, unknown>;
+  ranges: {
+    pressure?: { values: number[] };
+  };
+}
+
+/**
+ * Fetch 6-hour pressure forecast for a specific station
+ * @param station - Weather station object with coordinates
+ */
+export const getStationPressureForecast = async (
+  station: WeatherStation
+): Promise<StationPressureForecast> => {
+  try {
+    const now = new Date();
+    const sixHoursLater = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+    const datetime = `${now.toISOString()}/${sixHoursLater.toISOString()}`;
+    
+    const coords = `POINT(${station.lon} ${station.lat})`;
+    const params = new URLSearchParams({
+      coords,
+      datetime,
+      'parameter-name': 'Pressure',
+      f: 'CoverageJSON',
+    });
+
+    const url = `${EDR_BASE_URL}/collections/${FORECAST_COLLECTION}/position?${params}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch forecast for station ${station.fmisid}: ${response.statusText}`);
+    }
+
+    const data = await response.json() as ForecastCoverageJSONResponse;
+
+    const times = data.domain.axes.t.values;
+    const pressures = data.ranges.pressure?.values || [];
+
+    const forecast: PressureForecastPoint[] = times.map((time, index) => ({
+      time,
+      pressure: pressures[index],
+    }));
+
+    return {
+      station,
+      forecast,
+    };
+  } catch (error) {
+    return {
+      station,
+      forecast: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch forecast',
+    };
+  }
+};
+
+/**
+ * Fetch 6-hour pressure forecasts for all Gulf of Finland stations
+ */
+export const getAllStationPressureForecasts = async (): Promise<StationPressureForecast[]> => {
+  const results = await Promise.allSettled(
+    GULF_OF_FINLAND_STATIONS.map(station => getStationPressureForecast(station))
+  );
+
+  return results.map((result, index) => {
+    if (result.status === 'fulfilled') {
+      return result.value;
+    } else {
+      return {
+        station: GULF_OF_FINLAND_STATIONS[index],
+        forecast: [],
+        error: result.reason instanceof Error ? result.reason.message : 'Failed to fetch forecast',
+      };
+    }
+  });
+};

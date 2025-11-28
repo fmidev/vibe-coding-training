@@ -20,12 +20,17 @@ import {
 import { Refresh, ErrorOutline } from '@mui/icons-material';
 import {
   getAllStationObservations,
+  getAllStationPressureForecasts,
   type StationObservations,
+  type StationPressureForecast,
 } from '../services/observationsApi';
+import PressureTrendChart from './PressureTrendChart';
 
 const SailorWeatherPage: React.FC = () => {
   const [observations, setObservations] = useState<StationObservations[]>([]);
+  const [pressureForecasts, setPressureForecasts] = useState<StationPressureForecast[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingForecasts, setLoadingForecasts] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
@@ -44,8 +49,21 @@ const SailorWeatherPage: React.FC = () => {
     }
   };
 
+  const fetchPressureForecasts = async () => {
+    setLoadingForecasts(true);
+    try {
+      const data = await getAllStationPressureForecasts();
+      setPressureForecasts(data);
+    } catch (err) {
+      console.error('Error fetching pressure forecasts:', err);
+    } finally {
+      setLoadingForecasts(false);
+    }
+  };
+
   useEffect(() => {
     fetchObservations();
+    fetchPressureForecasts();
   }, []);
 
   const formatValue = (value: number | undefined, decimals: number = 1): string => {
@@ -178,6 +196,11 @@ const SailorWeatherPage: React.FC = () => {
           </Table>
         </TableContainer>
       )}
+
+      {/* Pressure Trend Chart */}
+      <Box sx={{ mt: 4 }}>
+        <PressureTrendChart forecasts={pressureForecasts} loading={loadingForecasts} />
+      </Box>
 
       <Box sx={{ mt: 3 }}>
         <Typography variant="body2" color="text.secondary">
