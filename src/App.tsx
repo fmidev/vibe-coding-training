@@ -32,20 +32,20 @@ function App() {
   const fetchWeatherData = async (city: City, useMockData = false) => {
     setLoading(true);
     setError(null);
-    try {
-      let data: CoverageJSONResponse;
-      
-      if (useMockData) {
-        // Use mock data for testing
-        console.log('Using mock weather data for', city.name);
-        data = getMockWeatherData();
-      } else {
-        // Try to fetch real data from API
+    
+    // Try to fetch real data from API with timeout
+    if (!useMockData) {
+      try {
         const [lon, lat] = city.coordinates;
         const now = new Date();
         const end = new Date(now.getTime() + 12 * 60 * 60 * 1000); // 12 hours ahead
         
-        data = await getPositionData(
+        // Create a promise that rejects after 5 seconds
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout')), 5000);
+        });
+        
+        const fetchPromise = getPositionData(
           'pal_skandinavia',
           `POINT(${lon} ${lat})`,
           {
@@ -53,28 +53,34 @@ function App() {
             'parameter-name': 'Temperature,WindSpeedMS,WindDirection,Precipitation1h,PoP',
             datetime: `${now.toISOString()}/${end.toISOString()}`,
           }
-        ) as CoverageJSONResponse;
+        ) as Promise<CoverageJSONResponse>;
         
-        console.log('Weather data received:', data);
-      }
-      
-      const extractedData = extractWeatherData(data, 12);
-      setWeatherData(extractedData);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch weather data';
-      setError(errorMessage);
-      console.error('Error fetching weather data:', err);
-      
-      // Fallback to mock data if API call fails
-      console.log('Falling back to mock data due to error');
-      try {
-        const mockData = getMockWeatherData();
-        const extractedData = extractWeatherData(mockData, 12);
+        // Race between timeout and actual fetch
+        const data = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        console.log('Weather data received from API:', data);
+        
+        const extractedData = extractWeatherData(data, 12);
         setWeatherData(extractedData);
-        setError(null); // Clear error since we have fallback data
-      } catch (mockErr) {
-        console.error('Error with mock data:', mockErr);
+        setLoading(false);
+        return;
+      } catch (err) {
+        console.error('Error fetching weather data from API:', err);
+        console.log('Falling back to mock data...');
+        // Continue to fallback below
       }
+    }
+    
+    // Use mock data (either explicitly requested or as fallback)
+    try {
+      console.log('Using mock weather data for', city.name);
+      const mockData = getMockWeatherData();
+      const extractedData = extractWeatherData(mockData, 12);
+      setWeatherData(extractedData);
+      setError(null);
+    } catch (mockErr) {
+      console.error('Error with mock data:', mockErr);
+      setError('Failed to load weather data');
     } finally {
       setLoading(false);
     }
