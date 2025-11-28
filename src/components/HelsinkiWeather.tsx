@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect } from 'react';
+import { type FC, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -8,6 +8,11 @@ import {
   Alert,
   Grid,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  type SelectChangeEvent,
 } from '@mui/material';
 import {
   Thermostat,
@@ -40,6 +45,20 @@ interface CoverageJSONResponse {
     weathersymbol3?: { values: number[] };
   };
 }
+
+// Ten largest cities in Finland with their coordinates
+const FINNISH_CITIES = [
+  { name: 'Helsinki', coords: 'POINT(24.9384 60.1699)' },
+  { name: 'Espoo', coords: 'POINT(24.6559 60.2055)' },
+  { name: 'Tampere', coords: 'POINT(23.7610 61.4978)' },
+  { name: 'Vantaa', coords: 'POINT(25.0378 60.2934)' },
+  { name: 'Oulu', coords: 'POINT(25.4714 65.0121)' },
+  { name: 'Turku', coords: 'POINT(22.2666 60.4518)' },
+  { name: 'Jyväskylä', coords: 'POINT(25.7333 62.2426)' },
+  { name: 'Lahti', coords: 'POINT(25.6612 60.9827)' },
+  { name: 'Kuopio', coords: 'POINT(27.6783 62.8924)' },
+  { name: 'Pori', coords: 'POINT(21.7972 61.4851)' },
+] as const;
 
 const HELSINKI_COORDS = 'POINT(24.9384 60.1699)';
 
@@ -116,11 +135,20 @@ const HelsinkiWeather: FC = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('Helsinki');
 
-  const fetchWeatherData = async () => {
+  const handleCityChange = (event: SelectChangeEvent) => {
+    setSelectedCity(event.target.value);
+  };
+
+  const fetchWeatherData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      // Find the selected city's coordinates
+      const city = FINNISH_CITIES.find(c => c.name === selectedCity);
+      const coords = city ? city.coords : HELSINKI_COORDS;
+      
       // Get current time and 1 hour ahead for latest forecast
       const now = new Date();
       const later = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour later
@@ -131,7 +159,7 @@ const HelsinkiWeather: FC = () => {
 
       const data = await getPositionData(
         'pal_skandinavia',
-        HELSINKI_COORDS,
+        coords,
         {
           f: 'CoverageJSON',
           'parameter-name': 'Temperature,Precipitation1h,PrecipitationForm,WeatherSymbol3',
@@ -161,14 +189,14 @@ const HelsinkiWeather: FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCity]);
 
   useEffect(() => {
     fetchWeatherData();
     // Refresh every 5 minutes
     const interval = setInterval(fetchWeatherData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchWeatherData]); // Re-fetch when fetchWeatherData changes (which includes selectedCity)
 
   if (loading) {
     return (
@@ -197,8 +225,27 @@ const HelsinkiWeather: FC = () => {
   return (
     <Box>
       <Typography variant="h3" component="h1" gutterBottom fontWeight="bold" textAlign="center">
-        Helsinki Weather
+        {selectedCity} Weather
       </Typography>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="city-select-label">Select City</InputLabel>
+          <Select
+            labelId="city-select-label"
+            id="city-select"
+            value={selectedCity}
+            label="Select City"
+            onChange={handleCityChange}
+          >
+            {FINNISH_CITIES.map((city) => (
+              <MenuItem key={city.name} value={city.name}>
+                {city.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
       
       <Typography variant="subtitle1" color="text.secondary" textAlign="center" gutterBottom>
         Updated: {new Date(weatherData.timestamp).toLocaleString()}
