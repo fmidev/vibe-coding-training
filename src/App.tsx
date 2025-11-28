@@ -12,8 +12,9 @@ import {
   Divider,
   CircularProgress,
   Alert,
+  Snackbar,
 } from '@mui/material';
-import { CloudQueue } from '@mui/icons-material';
+import { CloudQueue, Favorite } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
 import { getActivitySuggestion } from './utils/activitySuggestions';
 import ActivityMap from './components/ActivityMap';
@@ -56,8 +57,17 @@ function App() {
   const [weatherData, setWeatherData] = useState<CoverageJSONResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   console.log('App state:', { hasWeatherData: !!weatherData, loading, error });
+
+  const handleDonationClick = () => {
+    setShowThankYou(true);
+  };
+
+  const handleCloseThankYou = () => {
+    setShowThankYou(false);
+  };
 
   const fetchExampleWeatherData = async () => {
     setLoading(true);
@@ -167,6 +177,19 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Vibe Coding Training - Weather App
           </Typography>
+          <Button
+            color="inherit"
+            startIcon={<Favorite />}
+            onClick={handleDonationClick}
+            sx={{ 
+              textTransform: 'none',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+              }
+            }}
+          >
+            Donate
+          </Button>
         </Toolbar>
       </AppBar>
 
@@ -274,6 +297,23 @@ function App() {
           </Card>
         </Stack>
       </Container>
+
+      {/* Thank You Snackbar */}
+      <Snackbar
+        open={showThankYou}
+        autoHideDuration={4000}
+        onClose={handleCloseThankYou}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseThankYou} 
+          severity="success" 
+          sx={{ width: '100%' }}
+          icon={<Favorite />}
+        >
+          Thank you for your support! ❤️
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
