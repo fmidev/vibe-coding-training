@@ -332,10 +332,11 @@ function App() {
                         {Object.keys(weatherData.ranges).map((paramKey) => {
                           const value = weatherData.ranges[paramKey].values[0];
                           const unit = weatherData.parameters[paramKey]?.unit?.symbol || '';
+                          const displayValue = typeof value === 'number' ? value.toFixed(1) : (value ?? 'N/A');
                           return (
                             <TableRow key={paramKey} hover>
                               <TableCell>{paramKey}</TableCell>
-                              <TableCell>{value !== null && value !== undefined ? value.toFixed(1) : 'N/A'}</TableCell>
+                              <TableCell>{displayValue}</TableCell>
                               <TableCell>{unit}</TableCell>
                             </TableRow>
                           );
