@@ -41,7 +41,7 @@ interface CoverageJSONResponse {
 
 const HELSINKI_COORDS = 'POINT(24.9384 60.1699)';
 
-// Mock data for development/demo purposes
+// Mock data for development/demo purposes when API is not accessible
 const MOCK_DATA = {
   temperature: 6.18,
   precipitation1h: 0.33,
@@ -49,9 +49,6 @@ const MOCK_DATA = {
   weatherSymbol: 31,
   timestamp: new Date().toISOString(),
 };
-
-// Use mock data in development if API fails
-const USE_MOCK_DATA = true;
 
 // Helper function to get precipitation form as text
 const getPrecipitationFormText = (code: number): string => {
@@ -143,9 +140,10 @@ const HelsinkiWeather: FC = () => {
         timestamp,
       });
     } catch (err) {
-      // In development, use mock data if API fails
-      if (USE_MOCK_DATA) {
-        console.log('Using mock data due to API error:', err);
+      // In development mode, use mock data if API fails
+      // In production, the API should be accessible
+      if (import.meta.env.DEV) {
+        console.log('Using mock data due to API error in development:', err);
         setWeatherData(MOCK_DATA);
       } else {
         setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
