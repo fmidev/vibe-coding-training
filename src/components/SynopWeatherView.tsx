@@ -38,7 +38,7 @@ interface ChartDataPoint {
 const SynopWeatherView: React.FC = () => {
   const [wmoIndex, setWmoIndex] = useState<string>('');
   const [startDate, setStartDate] = useState<Date>(
-    new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
+    new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 day ago
   );
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
@@ -66,6 +66,7 @@ const SynopWeatherView: React.FC = () => {
   };
 
   // Prepare chart data
+  // Note: API returns hourly observations, so we show time even though users select dates
   const chartData: ChartDataPoint[] = observations.map((obs) => ({
     time: obs.timestamp.toLocaleTimeString('en-GB', {
       month: 'short',
