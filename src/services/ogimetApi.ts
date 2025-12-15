@@ -3,7 +3,9 @@
  * API Documentation: https://www.ogimet.com/
  * Provides access to synoptic weather observations
  * 
- * Note: Using allOrigins CORS proxy to bypass browser CORS restrictions
+ * Note: Using allOrigins CORS proxy to bypass browser CORS restrictions.
+ * For production applications, consider implementing your own backend proxy
+ * to avoid third-party service dependencies and potential security/reliability issues.
  */
 
 const OGIMET_BASE_URL = 'https://www.ogimet.com/cgi-bin';
