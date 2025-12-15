@@ -32,6 +32,7 @@ const STATION_NAMES: Record<string, StationInfo> = {
   '02777': { wmoIndex: '02777', name: 'Rovaniemi', country: 'Finland', latitude: 66.58, longitude: 25.83 },
   '02865': { wmoIndex: '02865', name: 'Jyväskylä', country: 'Finland', latitude: 62.40, longitude: 25.68 },
   '01001': { wmoIndex: '01001', name: 'Jan Mayen', country: 'Norway', latitude: 70.93, longitude: -8.67 },
+  '01098': { wmoIndex: '01098', name: 'Vardø', country: 'Norway', latitude: 70.37, longitude: 31.10 },
   '01415': { wmoIndex: '01415', name: 'Oslo-Blindern', country: 'Norway', latitude: 59.94, longitude: 10.72 },
   '01384': { wmoIndex: '01384', name: 'Trondheim', country: 'Norway', latitude: 63.41, longitude: 10.40 },
   '02591': { wmoIndex: '02591', name: 'Stockholm-Arlanda', country: 'Sweden', latitude: 59.65, longitude: 17.95 },

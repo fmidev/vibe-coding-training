@@ -8,7 +8,6 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Autocomplete,
   Stack,
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -27,7 +26,6 @@ import {
 import {
   getSynopObservations,
   getStationInfo,
-  getAvailableStations,
   type SynopObservation,
 } from '../services/ogimetApi';
 
@@ -38,7 +36,7 @@ interface ChartDataPoint {
 }
 
 const SynopWeatherView: React.FC = () => {
-  const [wmoIndex, setWmoIndex] = useState<string>('02974');
+  const [wmoIndex, setWmoIndex] = useState<string>('');
   const [startDate, setStartDate] = useState<Date>(
     new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
   );
@@ -47,7 +45,6 @@ const SynopWeatherView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [observations, setObservations] = useState<SynopObservation[]>([]);
 
-  const availableStations = getAvailableStations();
   const currentStation = getStationInfo(wmoIndex);
 
   const handleFetchData = async () => {
@@ -97,20 +94,13 @@ const SynopWeatherView: React.FC = () => {
 
           <Box sx={{ mt: 3 }}>
             <Stack spacing={2}>
-              <Autocomplete
-                value={currentStation}
-                onChange={(_, newValue) => {
-                  if (newValue) {
-                    setWmoIndex(newValue.wmoIndex);
-                  }
-                }}
-                options={availableStations}
-                getOptionLabel={(option) =>
-                  `${option.name} (${option.wmoIndex}) - ${option.country}`
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="WMO Station" fullWidth />
-                )}
+              <TextField
+                label="WMO Station Index"
+                value={wmoIndex}
+                onChange={(e) => setWmoIndex(e.target.value)}
+                placeholder="Enter WMO index (e.g., 01098 for Vardø)"
+                fullWidth
+                helperText="Enter a 5-digit WMO station index"
               />
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <DateTimePicker
