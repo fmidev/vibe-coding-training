@@ -4804,7 +4804,24 @@ export const getSynopObservations = async (
   const end = formatOgimetDateComponents(endDate);
   
   // Build URL using display_synops2.php endpoint as per user request
-  const ogimetUrl = `https://www.ogimet.com/display_synops2.php?lang=en&lugar=${wmoIndex}&tipo=ALL&ord=REV&nil=NO&fmt=html&ano=${start.year}&mes=${String(start.month).padStart(2, '0')}&day=${String(start.day).padStart(2, '0')}&hora=${String(start.hour).padStart(2, '0')}&anof=${end.year}&mesf=${String(end.month).padStart(2, '0')}&dayf=${String(end.day).padStart(2, '0')}&horaf=${String(end.hour).padStart(2, '0')}&send=send`;
+  const params = new URLSearchParams({
+    lang: 'en',
+    lugar: wmoIndex,
+    tipo: 'ALL',
+    ord: 'REV',
+    nil: 'NO',
+    fmt: 'html',
+    ano: String(start.year),
+    mes: String(start.month).padStart(2, '0'),
+    day: String(start.day).padStart(2, '0'),
+    hora: String(start.hour).padStart(2, '0'),
+    anof: String(end.year),
+    mesf: String(end.month).padStart(2, '0'),
+    dayf: String(end.day).padStart(2, '0'),
+    horaf: String(end.hour).padStart(2, '0'),
+    send: 'send'
+  });
+  const ogimetUrl = `https://www.ogimet.com/display_synops2.php?${params.toString()}`;
   const url = `${CORS_PROXY}${encodeURIComponent(ogimetUrl)}`;
   
   const response = await fetch(url);
@@ -4844,23 +4861,33 @@ export const getSynopObservations = async (
           const day = parseInt(timeCode.substring(0, 2), 10);
           const hour = parseInt(timeCode.substring(2, 4), 10);
           
-          // We need to determine the year and month from the date range
-          // Use the start date's year and month, adjusting if day rollover occurred
-          let year = start.year;
-          let month = start.month;
+          // Determine year and month based on date range
+          // Strategy: Find the date within the range that matches this day and hour
+          let bestDate = new Date(start.year, start.month - 1, day, hour);
           
-          // If the day is less than start day and we're near month boundary, might be next month
-          if (day < start.day && start.day > 25) {
-            month++;
-            if (month > 12) {
-              month = 1;
-              year++;
+          // If this date is before our start date, try next month
+          if (bestDate < startDate) {
+            bestDate = new Date(start.year, start.month, day, hour);
+            // If still before start, try next month again (for year boundary)
+            if (bestDate < startDate && start.month === 12) {
+              bestDate = new Date(start.year + 1, 0, day, hour);
             }
           }
           
-          const synopCode = content;
-          const observation = parseSynopMessage(wmoIndex, year, month, day, hour, 0, synopCode);
-          observations.push(observation);
+          // Only include if within our date range
+          if (bestDate >= startDate && bestDate <= endDate) {
+            const synopCode = content;
+            const observation = parseSynopMessage(
+              wmoIndex, 
+              bestDate.getFullYear(), 
+              bestDate.getMonth() + 1, 
+              day, 
+              hour, 
+              0, 
+              synopCode
+            );
+            observations.push(observation);
+          }
         }
       } catch (error) {
         console.error('Error parsing SYNOP message:', error);
