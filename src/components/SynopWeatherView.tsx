@@ -10,7 +10,7 @@ import {
   Alert,
   Stack,
 } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
@@ -103,13 +103,13 @@ const SynopWeatherView: React.FC = () => {
                 helperText="Enter a 5-digit WMO station index"
               />
               <Box sx={{ display: 'flex', gap: 2 }}>
-                <DateTimePicker
+                <DatePicker
                   label="Start Date"
                   value={startDate}
                   onChange={(newValue) => newValue && setStartDate(newValue)}
                   slotProps={{ textField: { fullWidth: true } }}
                 />
-                <DateTimePicker
+                <DatePicker
                   label="End Date"
                   value={endDate}
                   onChange={(newValue) => newValue && setEndDate(newValue)}
