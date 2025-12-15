@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { CloudQueue, Code, GitHub, BugReport } from '@mui/icons-material';
 import { getPositionData } from './services/edrApi';
+import SynopWeatherView from './components/SynopWeatherView';
 
 interface CoverageJSONResponse {
   type: string;
@@ -127,6 +128,9 @@ function App() {
               Let's build an awesome weather application together using FMI Open Data!
             </Typography>
           </Box>
+
+          {/* Synoptic Weather Observations */}
+          <SynopWeatherView />
 
           {/* Getting Started Card */}
           <Card elevation={3}>
