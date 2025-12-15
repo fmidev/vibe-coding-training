@@ -8,7 +8,6 @@
  * to avoid third-party service dependencies and potential security/reliability issues.
  */
 
-const OGIMET_BASE_URL = 'https://www.ogimet.com/cgi-bin';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 export interface SynopObservation {
@@ -4778,20 +4777,21 @@ const parseSynopMessage = (wmoIndex: string, year: number, month: number, day: n
 };
 
 /**
- * Format date for Ogimet API (YYYYMMDDHHMM)
+ * Format date for Ogimet display_synops2.php API
+ * Returns separate components for year, month, day, hour
  */
-const formatOgimetDate = (date: Date): string => {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  return `${year}${month}${day}${hours}${minutes}`;
+const formatOgimetDateComponents = (date: Date): { year: number; month: number; day: number; hour: number } => {
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+    hour: date.getUTCHours()
+  };
 };
 
 /**
- * Fetch SYNOP observations from Ogimet
- * @param wmoIndex - WMO station index (e.g., "02974" for Helsinki-Vantaa)
+ * Fetch SYNOP observations from Ogimet using display_synops2.php
+ * @param wmoIndex - WMO station index (e.g., "01245" for Oppdal-Bjorke)
  * @param startDate - Start date for observations
  * @param endDate - End date for observations
  */
@@ -4800,10 +4800,11 @@ export const getSynopObservations = async (
   startDate: Date,
   endDate: Date
 ): Promise<SynopObservation[]> => {
-  const begin = formatOgimetDate(startDate);
-  const end = formatOgimetDate(endDate);
+  const start = formatOgimetDateComponents(startDate);
+  const end = formatOgimetDateComponents(endDate);
   
-  const ogimetUrl = `${OGIMET_BASE_URL}/getsynop?block=${wmoIndex}&begin=${begin}&end=${end}`;
+  // Build URL using display_synops2.php endpoint as per user request
+  const ogimetUrl = `https://www.ogimet.com/display_synops2.php?lang=en&lugar=${wmoIndex}&tipo=ALL&ord=REV&nil=NO&fmt=html&ano=${start.year}&mes=${String(start.month).padStart(2, '0')}&day=${String(start.day).padStart(2, '0')}&hora=${String(start.hour).padStart(2, '0')}&anof=${end.year}&mesf=${String(end.month).padStart(2, '0')}&dayf=${String(end.day).padStart(2, '0')}&horaf=${String(end.hour).padStart(2, '0')}&send=send`;
   const url = `${CORS_PROXY}${encodeURIComponent(ogimetUrl)}`;
   
   const response = await fetch(url);
@@ -4811,38 +4812,62 @@ export const getSynopObservations = async (
     throw new Error(`Failed to fetch SYNOP data: ${response.statusText}`);
   }
   
-  const text = await response.text();
+  const html = await response.text();
   
-  // Check for error messages from Ogimet API
-  if (text.startsWith('Status:') && (text.includes('no es correcta') || text.includes('not'))) {
-    throw new Error('Invalid date range or WMO index');
-  }
-  
-  const lines = text.trim().split('\n');
+  // Parse HTML to extract SYNOP messages
   const observations: SynopObservation[] = [];
   
-  for (const line of lines) {
-    if (!line.trim()) continue;
+  // Extract SYNOP codes from HTML - they appear in <pre> tags after AAXX headers
+  // Format: AAXX YYGGi followed by SYNOP data in the next <pre> tag
+  const preTagPattern = /<pre>(AAXX \d{5}|[\d\s/=]+)<\/pre>/gi;
+  const matches = html.match(preTagPattern);
+  
+  if (!matches) {
+    return observations;
+  }
+  
+  let currentHeader: string | null = null;
+  
+  for (const match of matches) {
+    const content = match.replace(/<\/?pre>/g, '').trim();
     
-    // Parse CSV format: WMO,YYYY,MM,DD,HH,MM,SYNOP_CODE
-    const parts = line.split(',');
-    if (parts.length < 7) continue;
-    
-    const [wmo, yearStr, monthStr, dayStr, hourStr, minuteStr, ...synopParts] = parts;
-    const synopCode = synopParts.join(',');
-    
-    const year = parseInt(yearStr, 10);
-    const month = parseInt(monthStr, 10);
-    const day = parseInt(dayStr, 10);
-    const hour = parseInt(hourStr, 10);
-    const minute = parseInt(minuteStr, 10);
-    
-    if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
-      continue;
+    if (content.startsWith('AAXX')) {
+      // This is a header with timestamp
+      currentHeader = content;
+    } else if (currentHeader && content) {
+      // This is SYNOP data following a header
+      try {
+        // Parse the AAXX header: AAXX YYGGi
+        const headerParts = currentHeader.split(/\s+/);
+        if (headerParts.length >= 2) {
+          const timeCode = headerParts[1];
+          const day = parseInt(timeCode.substring(0, 2), 10);
+          const hour = parseInt(timeCode.substring(2, 4), 10);
+          
+          // We need to determine the year and month from the date range
+          // Use the start date's year and month, adjusting if day rollover occurred
+          let year = start.year;
+          let month = start.month;
+          
+          // If the day is less than start day and we're near month boundary, might be next month
+          if (day < start.day && start.day > 25) {
+            month++;
+            if (month > 12) {
+              month = 1;
+              year++;
+            }
+          }
+          
+          const synopCode = content;
+          const observation = parseSynopMessage(wmoIndex, year, month, day, hour, 0, synopCode);
+          observations.push(observation);
+        }
+      } catch (error) {
+        console.error('Error parsing SYNOP message:', error);
+      }
+      
+      currentHeader = null;
     }
-    
-    const observation = parseSynopMessage(wmo, year, month, day, hour, minute, synopCode);
-    observations.push(observation);
   }
   
   return observations;
