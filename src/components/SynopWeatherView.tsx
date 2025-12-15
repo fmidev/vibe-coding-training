@@ -145,7 +145,7 @@ const SynopWeatherView: React.FC = () => {
               <Typography variant="body2" color="text.secondary">
                 Location: {currentStation.country}
                 {currentStation.latitude && currentStation.longitude && (
-                  <> ({currentStation.latitude.toFixed(2)}°N, {currentStation.longitude.toFixed(2)}°E)</>
+                  <> ({Math.abs(currentStation.latitude).toFixed(2)}°{currentStation.latitude >= 0 ? 'N' : 'S'}, {Math.abs(currentStation.longitude).toFixed(2)}°{currentStation.longitude >= 0 ? 'E' : 'W'})</>
                 )}
               </Typography>
             </Box>

@@ -156,8 +156,8 @@ export const getSynopObservations = async (
   
   const text = await response.text();
   
-  // Check for error messages
-  if (text.includes('Status:') && text.includes('not') || text.includes('no es correcta')) {
+  // Check for error messages from Ogimet API
+  if (text.startsWith('Status:') && (text.includes('no es correcta') || text.includes('not'))) {
     throw new Error('Invalid date range or WMO index');
   }
   
