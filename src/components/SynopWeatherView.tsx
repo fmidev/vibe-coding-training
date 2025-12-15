@@ -90,7 +90,8 @@ const SynopWeatherView: React.FC = () => {
             Synoptic Weather Observations
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
-            Fetch temperature and precipitation observations from Ogimet by WMO station index
+            Fetch temperature and precipitation observations from Ogimet by WMO station index. 
+            Data is retrieved securely via a CORS proxy from www.ogimet.com.
           </Typography>
 
           <Box sx={{ mt: 3 }}>

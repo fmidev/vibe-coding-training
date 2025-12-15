@@ -2,9 +2,12 @@
  * Ogimet SYNOP API Service
  * API Documentation: https://www.ogimet.com/
  * Provides access to synoptic weather observations
+ * 
+ * Note: Using allOrigins CORS proxy to bypass browser CORS restrictions
  */
 
 const OGIMET_BASE_URL = 'https://www.ogimet.com/cgi-bin';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 export interface SynopObservation {
   timestamp: Date;
@@ -4798,7 +4801,8 @@ export const getSynopObservations = async (
   const begin = formatOgimetDate(startDate);
   const end = formatOgimetDate(endDate);
   
-  const url = `${OGIMET_BASE_URL}/getsynop?block=${wmoIndex}&begin=${begin}&end=${end}`;
+  const ogimetUrl = `${OGIMET_BASE_URL}/getsynop?block=${wmoIndex}&begin=${begin}&end=${end}`;
+  const url = `${CORS_PROXY}${encodeURIComponent(ogimetUrl)}`;
   
   const response = await fetch(url);
   if (!response.ok) {
